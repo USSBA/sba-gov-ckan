@@ -1,0 +1,68 @@
+{
+  "variables": {
+    "image_name": "ussba-cis-centos7-ckan-solr-test",
+    "ckan_version": "2.8.2"
+  },
+  "builders": [{
+    "type": "amazon-ebs",
+    "name": "cis-ckan",
+    "region": "us-east-1",
+    "instance_type": "t2.medium",
+    "ssh_username": "centos",
+    "ssh_interface": "public_ip",
+    "ami_name": "{{user `image_name`}}-{{timestamp}}",
+    "tags": {
+        "Name": "packer-{{user `image_name`}}-{{timestamp}}"
+    },
+    "snapshot_tags": {
+        "Name": "packer-{{user `image_name`}}-{{timestamp}}"
+    },
+    "run_tags": {
+        "Name": "packer-{{user `image_name`}}-{{timestamp}}"
+    },
+    "source_ami_filter": {
+      "filters": {
+        "virtualization-type": "hvm",
+        "name": "CIS Centos Linux 7 Benchmark*",
+        "root-device-type": "ebs"
+      },
+      "owners": ["679593333241"],
+      "most_recent": true
+    }
+  }
+  ],
+  "provisioners": [
+      {
+        "type": "shell",
+        "inline":[
+            "echo 'Installing EPEL for dependency resolution'",
+            "sudo yum install -y https://dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epel-release-7-11.noarch.rpm",
+            "echo 'performing yum updates'",
+            "sudo yum update -y",
+            "echo 'Installing pip and aws-cli...'",
+            "sudo yum install -y python-pip",
+            "sudo pip install awscli",
+            "sudo /usr/bin/easy_install --script-dir /opt/aws/bin https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz"
+        ]
+      },
+      {
+        "type": "shell",
+        "inline": [
+            "echo 'Installing CKAN search dependencies: Jetty, SOLR, Redis...'",
+            "cd /opt/",
+            "sudo curl -O https://repo1.maven.org/maven2/org/eclipse/jetty/jetty-distribution/9.4.15.v20190215/jetty-distribution-9.4.15.v20190215.tar.gz",
+            "sudo tar -xzvf jetty-distribution-9.4.15.v20190215.tar.gz -C /opt/",
+            "sudo mv jetty-distribution-9.4.15.v20190215 jetty",
+            "sudo ln -s /opt/jetty/bin/jetty.sh /etc/init.d/jetty",
+            "sudo rm jetty-distribution-9.4.15.v20190215.tar.gz",
+            "sudo curl -O https://archive.apache.org/dist/lucene/solr/8.0.0/solr-8.0.0.tgz",
+            "sudo tar -xzf solr-8.0.0.tgz -C /opt/",
+            "sudo mv solr-8.0.0 solr",
+            "sudo ln -s solr-8.0.0 solr",
+            "sudo rm solr-8.0.0.tgz",
+            "sudo yum install -y redis",
+            "cd ~"
+        ]
+      }
+    ]
+}
