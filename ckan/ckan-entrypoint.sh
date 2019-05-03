@@ -28,15 +28,30 @@ if [ -z "$SOLR_URL" ]; then
 fi
 
 export POSTGRES_USER=${POSTGRES_USER}
-export POSTGRES_PASSWORD=`aws ssm get-parameter --name ${POSTGRES_PWD_PARAMETER} | jq -r .Parameter.Value`
 export POSTGRES_HOST=${POSTGRES_HOST}
 export POSTGRES_DB=${POSTGRES_DB}
 export SITE_ID=${SITE_ID:-default}
 export SITE_URL=${SITE_URL}
 export REDIS_URL=${REDIS_URL}
 export SOLR_URL=${SOLR_URL}
-export SMTP_USR=`aws secretsmanager get-secret-value --secret-id ${SMTP_USR_PARAMETER_ID} | jq -r .SecretString`
-export SMTP_PWD=`aws secretsmanager get-secret-value --secret-id ${SMTP_PWD_PARAMETER_ID} | jq -r .SecretString`
+
+if [ ! -z "$POSTGRES_PASSWORD" ]; then
+  export POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+else
+  export POSTGRES_PASSWORD=`aws ssm get-parameter --name "${POSTGRES_PWD_PARAMETER}" | jq -r .Parameter.Value`
+fi
+
+if [ ! -z "$SMTP_USR" ]; then
+  export SMTP_USR=${SMTP_USR}
+else
+  export SMTP_USR=`aws secretsmanager get-secret-value --secret-id "${SMTP_USR_PARAMETER_ID}" | jq -r .SecretString`
+fi
+
+if [ ! -z "$SMTP_PWD" ]; then
+  export SMTP_PWD=${SMTP_PWD}
+else
+  export SMTP_PWD=`aws secretsmanager get-secret-value --secret-id "${SMTP_PWD_PARAMETER_ID}" | jq -r .SecretString`
+fi
 
 # DATASTORE/DATAPUSHER STUFF
 # until psql "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db/${POSTGRES_DB}" -c '\q'; do
