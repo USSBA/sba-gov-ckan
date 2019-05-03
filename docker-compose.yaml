@@ -1,0 +1,62 @@
+version: '3'
+# psql -t -l postgresql://ckan_default:Fearless@db/ckan_default
+# https://docs.ckan.org/en/ckan-2.7.3/maintaining/configuration.html
+# https://docs.ckan.org/projects/datapusher/en/latest/development.html
+services:
+
+  ckan:
+    container_name: ckan
+    build:
+      context: ./ckan/
+    depends_on:
+    - db
+    - solr
+    - redis
+    links:
+    - db
+    - solr
+    - redis
+    ports:
+    - 80:80
+    environment:
+    - AWS_PROFILE=sba-upper
+    - SMTP_USR_PARAMETER_ID=staging_SES_USER
+    - SMTP_PWD_PARAMETER_ID=staging_SES_PASSWORD
+    - POSTGRES_PWD_PARAMETER=/ckan/staging/db_password/postgres
+    - POSTGRES_DB=ckan_default
+    - POSTGRES_USER=ckan_default
+    - POSTGRES_HOST=db
+    - SITE_URL=http://localhost
+    - REDIS_URL=redis://redis:6379/1
+    - SOLR_URL=http://solr:8983/solr/ckan
+    volumes:
+    - ~/.aws/:/root/.aws/
+
+  #datapusher:
+  #  container_name: datapusher
+  #  image: clementmouchet/datapusher
+  #  ports:
+  #  - 8800
+
+  db:
+    container_name: postgres
+    image: postgres:11.1
+    environment:
+    - POSTGRES_PASSWORD=${POSTRES_PASSWORD}
+    - POSTGRES_USER=ckan_default
+    - POSTGRES_DB=ckan_default
+    ports:
+    - 5432
+
+  solr:
+    container_name: solr
+    build:
+      context: ./solr/
+    ports:
+    - 8983
+
+  redis:
+    container_name: redis
+    image: redis:latest
+    ports:
+    - 6379
