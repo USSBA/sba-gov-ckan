@@ -20,18 +20,16 @@ services:
     - 80:80
     environment:
     - AWS_PROFILE=sba-upper
-    - POSTGRES_DB=ckan_default
-    - POSTGRES_USER=ckan_default
     - POSTGRES_HOST=db
     - SITE_URL=http://localhost
     - REDIS_URL=redis://redis:6379/1
     - SOLR_URL=http://solr:8983/solr/ckan
-    - POSTGRES_PASSWORD=${POSTRES_PASSWORD}
-    #- POSTGRES_PWD_PARAMETER=/ckan/staging/db_password/postgres
+    - POSTGRES_PASSWORD=fearless
     - SMTP_USR=fakeuser
-    #- SMTP_USR_PARAMETER_ID=staging_SES_USER
     - SMTP_PWD=fakepass
-    #- SMTP_PWD_PARAMETER_ID=staging_SES_PASSWORD
+    #- POSTGRES_PASSWORD_PSID=/ckan/staging/db_password/postgres
+    #- SMTP_USR_SMID=staging_SES_USER
+    #- SMTP_PWD_SMID=staging_SES_PASSWORD
     volumes:
     - ~/.aws/:/root/.aws/
 
@@ -45,7 +43,7 @@ services:
     container_name: postgres
     image: postgres:11.1
     environment:
-    - POSTGRES_PASSWORD=${POSTRES_PASSWORD}
+    - POSTGRES_PASSWORD=fearless
     - POSTGRES_USER=ckan_default
     - POSTGRES_DB=ckan_default
     ports:

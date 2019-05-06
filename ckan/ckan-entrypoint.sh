@@ -1,56 +1,91 @@
-#!/bin/sh -xe
+#!/bin/sh -e
+## configuring ckan
+## https://docs.ckan.org/en/ckan-2.7.3/maintaining/configuration.html
+## https://docs.ckan.org/en/2.8/maintaining/getting-started.html#create-admin-user
 
-abort () {
+export POSTGRES_USER=${POSTGRES_USER:-ckan_default}
+export POSTGRES_DB=${POSTGRES_DB:-ckan_default}
+export SITE_ID=${SITE_ID:-default}
+
+CONFIG_ERR=0
+
+## configure the postgres databae host name
+if [ -z "$POSTGRES_HOST" ]; then
+  echo "POSTGRES_HOST not configured"
+  CONFIG_ERR=1
+else
+  export POSTGRES_HOST=${POSTGRES_HOST}
+fi
+
+## configure the ckan site sname
+## ex: https://hostname:port
+## note: omit a trailing slash
+## note: this is required for interal redirection and must match the domain name exactly
+if [ -z "$SITE_URL" ]; then
+  echo "SITE_URL not configured"
+  CONFIG_ERR=1
+else
+  export SITE_URL=${SITE_URL}
+fi
+
+## configure the redis endpoint url including the database id
+## ex: redis://redis-host:port/1
+if [ -z "$REDIS_URL" ]; then
+  echo "REDIS_URL not configured"
+  CONFIG_ERR=1
+else
+  export REDIS_URL=${REDIS_URL}
+fi
+
+## configure solr url/solr core endpoint url
+## ex: http://solr-host:port/solr/ckan
+if [ -z "$SOLR_URL" ]; then
+  echo "SOLR_URL not configured"
+  CONFIG_ERR=1
+else
+  export SOLR_URL=${SOLR_URL}
+fi
+
+## configure password for the database
+if [ -z "$POSTGRES_PASSWORD" ] && [ -z "$POSTGRES_PASSWORD_PSID" ]; then
+  echo "POSTGRES_PASSWORD or POSTGRES_PASSWORD_PSID not configured"
+  CONFIG_ERR=1
+else
+  if [ ! -z "$POSTGRES_PASSWORD" ]; then
+    export POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+  else
+    export POSTGRES_PASSWORD=`aws ssm get-parameter --name ${POSTGRES_PASSWORD_PSID} | jq -r .Parameter.Value`
+  fi
+fi
+
+## configure the smtp user name
+if [ -z "$SMTP_USR" ] && [ -z "$SMTP_USR_SMID" ]; then
+  echo "SMTP_USR or SMTP_USR_SMID not configured"
+  CONFIG_ERR=1
+else
+  if [ ! -z "$SMTP_USR" ]; then
+    export SMTP_USR=${SMTP_USR}
+  else
+    export SMTP_USR=`aws secretsmanager get-secret-value --secret-id ${SMTP_USR_SMID} | jq -r .SecretString`
+  fi
+fi
+
+## configure smtp user password
+if [ -z "$SMTP_PWD" ] && [ -z "$SMTP_PWD_SMID" ]; then
+  echo "SMTP_PWD or SMTP_PWD_SMID not configured"
+  CONFIG_ERR=1
+else
+  if [ ! -z "$SMTP_PWD" ]; then
+    export SMTP_PWD=${SMTP_PWD}
+  else
+    export SMTP_PWD=`aws secretsmanager get-secret-value --secret-id ${SMTP_PWD_SMID} | jq -r .SecretString`
+  fi
+fi
+
+## if an error was recorded, exit now
+if [ "$CONFIG_ERR" == "1" ]; then
   echo "$@" >&2
   exit 1
-}
-
-# Configuring CKAN
-# https://docs.ckan.org/en/ckan-2.7.3/maintaining/configuration.html
-
-if [ -z "$POSTGRES_USER" ]; then
-  abort
-fi
-if [ -z "$POSTGRES_HOST" ]; then
-  abort
-fi
-if [ -z "$POSTGRES_DB" ]; then
-  abort
-fi
-if [ -z "$SITE_URL" ]; then
-  abort
-fi
-if [ -z "$REDIS_URL" ]; then
-  abort
-fi
-if [ -z "$SOLR_URL" ]; then
-  abort
-fi
-
-export POSTGRES_USER=${POSTGRES_USER}
-export POSTGRES_HOST=${POSTGRES_HOST}
-export POSTGRES_DB=${POSTGRES_DB}
-export SITE_ID=${SITE_ID:-default}
-export SITE_URL=${SITE_URL}
-export REDIS_URL=${REDIS_URL}
-export SOLR_URL=${SOLR_URL}
-
-if [ ! -z "$POSTGRES_PASSWORD" ]; then
-  export POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-else
-  export POSTGRES_PASSWORD=`aws ssm get-parameter --name "${POSTGRES_PWD_PARAMETER}" | jq -r .Parameter.Value`
-fi
-
-if [ ! -z "$SMTP_USR" ]; then
-  export SMTP_USR=${SMTP_USR}
-else
-  export SMTP_USR=`aws secretsmanager get-secret-value --secret-id "${SMTP_USR_PARAMETER_ID}" | jq -r .SecretString`
-fi
-
-if [ ! -z "$SMTP_PWD" ]; then
-  export SMTP_PWD=${SMTP_PWD}
-else
-  export SMTP_PWD=`aws secretsmanager get-secret-value --secret-id "${SMTP_PWD_PARAMETER_ID}" | jq -r .SecretString`
 fi
 
 # DATASTORE/DATAPUSHER STUFF
@@ -75,17 +110,14 @@ fi
 CONFIG="${CKAN_CONFIG}/production.ini"
 envsubst < $CONFIG > $CONFIG
 
-#THIS WILL CREATE A CONFIG EVERYTIME THE CONTAINER STARTS
-# - WE NOW INJECT THIS FILE AS A TEMPLATE DURING DOCKER IMAGE BUILD
-#ckan-paster make-config -v -q ckan "$CONFIG"
-
-# JUST IN-CASE
-#grep -n 'ckan.auth.create_user_via_api' $CONFIG | cut -d: -f1 | sed -i "$(xargs)s/true/false/" $CONFIG
-#grep -n 'ckan.auth.create_user_via_web' $CONFIG | cut -d: -f1 | sed -i "$(xargs)s/true/false/" $CONFIG
-
+# TODO: we should not initialize the database on every container that starts
+# perhasp we can use Cloud9 as a management console for CKAN
 ckan-paster --plugin=ckan db init -c "$CONFIG"
 
-# https://docs.ckan.org/en/2.8/maintaining/getting-started.html#create-admin-user
+# TODO: we may need to only run this line if the user does not exist...
+# running subsequent times no updates to the user will occur meaning the password/email will not
+# change once the user is created; that will need to be done via browser
+# perhasp we can use Cloud9 as a management console for CKAN
 yes | ckan-paster --plugin=ckan sysadmin add ias email=sbaias@fearless.tech password=${POSTGRES_PASSWORD} --config "$CONFIG"
 
 # DATASTORE/DATAPUSHER STUFF
