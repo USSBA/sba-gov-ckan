@@ -19,14 +19,17 @@ services:
     ports:
     - 80:80
     environment:
-    - AWS_PROFILE=sba-upper
+    # Environment Specific
     - POSTGRES_HOST=db
     - SITE_URL=http://localhost
     - REDIS_URL=redis://redis:6379/1
     - SOLR_URL=http://solr:8983/solr/ckan
+    # Secrets
     - POSTGRES_PASSWORD=fearless
     - SMTP_USR=fakeuser
     - SMTP_PWD=fakepass
+    ## To pull from AWS ParameterStore/SecretsManager, use the following:
+    #- AWS_PROFILE=sba-upper
     #- POSTGRES_PASSWORD_PSID=/ckan/staging/db_password/postgres
     #- SMTP_USR_SMID=staging_SES_USER
     #- SMTP_PWD_SMID=staging_SES_PASSWORD
