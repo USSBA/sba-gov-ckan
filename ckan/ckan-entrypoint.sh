@@ -11,7 +11,7 @@ CONFIG_ERR=0
 
 ## configure the postgres databae host name
 if [ -z "$POSTGRES_HOST" ]; then
-  echo "POSTGRES_HOST not configured"
+  echo "FATAL: POSTGRES_HOST not configured"
   CONFIG_ERR=1
 else
   export POSTGRES_HOST=${POSTGRES_HOST}
@@ -22,7 +22,7 @@ fi
 ## note: omit a trailing slash
 ## note: this is required for interal redirection and must match the domain name exactly
 if [ -z "$SITE_URL" ]; then
-  echo "SITE_URL not configured"
+  echo "FATAL: SITE_URL not configured"
   CONFIG_ERR=1
 else
   export SITE_URL=${SITE_URL}
@@ -31,7 +31,7 @@ fi
 ## configure the redis endpoint url including the database id
 ## ex: redis://redis-host:port/1
 if [ -z "$REDIS_URL" ]; then
-  echo "REDIS_URL not configured"
+  echo "FATAL: REDIS_URL not configured"
   CONFIG_ERR=1
 else
   export REDIS_URL=${REDIS_URL}
@@ -40,7 +40,7 @@ fi
 ## configure solr url/solr core endpoint url
 ## ex: http://solr-host:port/solr/ckan
 if [ -z "$SOLR_URL" ]; then
-  echo "SOLR_URL not configured"
+  echo "FATAL: SOLR_URL not configured"
   CONFIG_ERR=1
 else
   export SOLR_URL=${SOLR_URL}
@@ -48,7 +48,7 @@ fi
 
 ## configure password for the database
 if [ -z "$POSTGRES_PASSWORD" ] && [ -z "$POSTGRES_PASSWORD_PSID" ]; then
-  echo "POSTGRES_PASSWORD or POSTGRES_PASSWORD_PSID not configured"
+  echo "FATAL: POSTGRES_PASSWORD or POSTGRES_PASSWORD_PSID not configured"
   CONFIG_ERR=1
 else
   if [ ! -z "$POSTGRES_PASSWORD" ]; then
@@ -60,7 +60,7 @@ fi
 
 ## configure the smtp user name
 if [ -z "$SMTP_USR" ] && [ -z "$SMTP_USR_SMID" ]; then
-  echo "SMTP_USR or SMTP_USR_SMID not configured"
+  echo "FATAL: SMTP_USR or SMTP_USR_SMID not configured"
   CONFIG_ERR=1
 else
   if [ ! -z "$SMTP_USR" ]; then
@@ -72,7 +72,7 @@ fi
 
 ## configure smtp user password
 if [ -z "$SMTP_PWD" ] && [ -z "$SMTP_PWD_SMID" ]; then
-  echo "SMTP_PWD or SMTP_PWD_SMID not configured"
+  echo "FATAL: SMTP_PWD or SMTP_PWD_SMID not configured"
   CONFIG_ERR=1
 else
   if [ ! -z "$SMTP_PWD" ]; then
@@ -84,6 +84,7 @@ fi
 
 ## if an error was recorded, exit now
 if [ "$CONFIG_ERR" == "1" ]; then
+  echo "Configuration errors above must be corrected before this container can start.  Ensure all environment variables are set properly."
   echo "$@" >&2
   exit 1
 fi
