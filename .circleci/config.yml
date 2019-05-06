@@ -6,18 +6,41 @@ executors:
       - image: circleci/node
 
 jobs:
-  helloWorld:
+  snykScanSolr:
     executor: snyk
+    environment:
+      IMAGE: ckan-solr
     steps:
-      - run: echo "Hello!"
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Install Snyk
+          command: sudo npm install -g snyk
+      - deploy:
+          name: Build Solr Container
+          command: |
+            cd solr
+            docker image build -t $IMAGE .
+      - deploy:
+          name: Scan Solr Container
+          command: snyk test --docker $IMAGE:latest --file=solr/Dockerfile
 
 workflows:
   version: 2
   featureBranch:
     jobs:
-      - helloWorld:
+      - snykScanSolr:
+          context: snyk
           filters:
             branches:
               ignore:
                   - master
-                  - develop
+  masterBranch:
+    jobs:
+      - snykScanSolr:
+          context: snyk
+          filters:
+            branches:
+              only:
+                  - master
