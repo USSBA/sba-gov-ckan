@@ -116,7 +116,7 @@ envsubst < $CONFIG > $CONFIG
 
 # TODO: we should not initialize the database on every container that starts
 # perhasp we can use Cloud9 as a management console for CKAN
-echo "Running: db int"
+echo "Running: db init"
 ckan-paster --plugin=ckan db init -c "$CONFIG"
 
 # TODO: we may need to only run this line if the user does not exist...
