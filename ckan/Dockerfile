@@ -48,7 +48,7 @@ RUN ckan-pip install -U pip \
     && chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
 
 COPY ckan-entrypoint.sh /ckan-entrypoint.sh
-COPY production.ini $CKAN_CONFIG/production.ini
+COPY production.ini $CKAN_CONFIG/production.ini.unconfigured
 RUN chmod +x /ckan-entrypoint.sh
 
 ENTRYPOINT ["/ckan-entrypoint.sh"]

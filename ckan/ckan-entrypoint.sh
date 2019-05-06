@@ -112,7 +112,8 @@ fi
 
 echo "Running: envsubst"
 CONFIG="${CKAN_CONFIG}/production.ini"
-envsubst < $CONFIG > $CONFIG
+UNCONFIGURED_CONFIG="${CONFIG}.unconfigured"
+envsubst < $UNCONFIGURED_CONFIG > $CONFIG
 
 # TODO: we should not initialize the database on every container that starts
 # perhasp we can use Cloud9 as a management console for CKAN
