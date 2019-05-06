@@ -1,0 +1,23 @@
+version: 2.1
+
+executors:
+  snyk:
+    docker:
+      - image: circleci/node
+
+jobs:
+  helloWorld:
+    executor: snyk
+    steps:
+      - run: echo "Hello!"
+
+workflows:
+  version: 2
+  featureBranch:
+    jobs:
+      - helloWorld:
+          filters:
+            branches:
+              ignore:
+                  - master
+                  - develop
