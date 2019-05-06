@@ -87,6 +87,8 @@ if [ "$CONFIG_ERR" == "1" ]; then
   echo "Configuration errors above must be corrected before this container can start.  Ensure all environment variables are set properly."
   echo "$@" >&2
   exit 1
+else
+  echo "All environment variables are properly set."
 fi
 
 # DATASTORE/DATAPUSHER STUFF
@@ -108,21 +110,24 @@ fi
 # EOSQL
 # fi
 
+echo "Running: envsubst"
 CONFIG="${CKAN_CONFIG}/production.ini"
 envsubst < $CONFIG > $CONFIG
 
 # TODO: we should not initialize the database on every container that starts
 # perhasp we can use Cloud9 as a management console for CKAN
+echo "Running: db int"
 ckan-paster --plugin=ckan db init -c "$CONFIG"
 
 # TODO: we may need to only run this line if the user does not exist...
 # running subsequent times no updates to the user will occur meaning the password/email will not
 # change once the user is created; that will need to be done via browser
 # perhasp we can use Cloud9 as a management console for CKAN
+echo "Running: ckan-paster (creating sysadmin account)"
 yes | ckan-paster --plugin=ckan sysadmin add ias email=sbaias@fearless.tech password=${POSTGRES_PASSWORD} --config "$CONFIG"
 
 # DATASTORE/DATAPUSHER STUFF
 # ckan-paster --plugin=ckan datastore set-permissions -c "${CKAN_CONFIG}/production.ini" | \
 #   psql -a "${CKAN_SQLALCHEMY_URL}" --set ON_ERROR_STOP=1
-
+echo "Runing: exec"
 exec "$@"
