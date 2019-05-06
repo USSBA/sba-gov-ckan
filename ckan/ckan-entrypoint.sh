@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/bash -e
 ## configuring ckan
 ## https://docs.ckan.org/en/ckan-2.7.3/maintaining/configuration.html
 ## https://docs.ckan.org/en/2.8/maintaining/getting-started.html#create-admin-user
@@ -54,7 +54,7 @@ else
   if [ ! -z "$POSTGRES_PASSWORD" ]; then
     export POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
   else
-    export POSTGRES_PASSWORD=`aws ssm get-parameter --name ${POSTGRES_PASSWORD_PSID} | jq -r .Parameter.Value`
+    export POSTGRES_PASSWORD=`aws ssm get-parameter --name ${POSTGRES_PASSWORD_PSID} | jq -r .Parameter.Value` || CONFIG_ERR=1
   fi
 fi
 
@@ -66,7 +66,7 @@ else
   if [ ! -z "$SMTP_USR" ]; then
     export SMTP_USR=${SMTP_USR}
   else
-    export SMTP_USR=`aws secretsmanager get-secret-value --secret-id ${SMTP_USR_SMID} | jq -r .SecretString`
+    export SMTP_USR=`aws secretsmanager get-secret-value --secret-id ${SMTP_USR_SMID} | jq -r .SecretString` || CONFIG_ERR=1
   fi
 fi
 
@@ -78,7 +78,7 @@ else
   if [ ! -z "$SMTP_PWD" ]; then
     export SMTP_PWD=${SMTP_PWD}
   else
-    export SMTP_PWD=`aws secretsmanager get-secret-value --secret-id ${SMTP_PWD_SMID} | jq -r .SecretString`
+    export SMTP_PWD=`aws secretsmanager get-secret-value --secret-id ${SMTP_PWD_SMID} | jq -r .SecretString` || CONFIG_ERR=1
   fi
 fi
 
