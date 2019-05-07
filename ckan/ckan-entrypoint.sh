@@ -17,7 +17,7 @@ else
   export POSTGRES_HOST=${POSTGRES_HOST}
 fi
 
-## configure the ckan site sname
+## configure the ckan sites name
 ## ex: https://hostname:port
 ## note: omit a trailing slash
 ## note: this is required for interal redirection and must match the domain name exactly
