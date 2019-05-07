@@ -20,7 +20,7 @@ fi
 ## configure the ckan sites name
 ## ex: https://hostname:port
 ## note: omit a trailing slash
-## note: this is required for interal redirection and must match the domain name exactly
+## note: this is required for internal redirection and must match the domain name exactly
 if [ -z "$SITE_URL" ]; then
   echo "FATAL: SITE_URL not configured"
   CONFIG_ERR=1
