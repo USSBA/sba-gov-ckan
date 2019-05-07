@@ -1,0 +1,72 @@
+version: '3'
+# psql -t -l postgresql://ckan_default:Fearless@db/ckan_default
+# https://docs.ckan.org/en/ckan-2.7.3/maintaining/configuration.html
+# https://docs.ckan.org/projects/datapusher/en/latest/development.html
+services:
+
+  ckan:
+    container_name: ckan
+    build:
+      context: ./ckan/
+    depends_on:
+    - db
+    - solr
+    - redis
+    links:
+    - db
+    - solr
+    - redis
+    ports:
+    - 80:80
+    environment:
+    # Environment Specific
+    - POSTGRES_HOST=db
+    - SITE_URL=http://localhost
+    - REDIS_URL=redis://redis:6379/1
+    - REDIS_HOST=redis
+    - SOLR_URL=http://solr:8983/solr/ckan
+    - SOLR_HOST=solr
+    # Secrets
+    - POSTGRES_PASSWORD=fearless
+    - SMTP_USR=fakeuser
+    - SMTP_PWD=fakepass
+    - APP_UUID=aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb
+    - SESSION_SECRET=AAAAAAAAAAAAAAAAAAAAAAAAA
+    ## To pull from AWS ParameterStore/SecretsManager, use the following:
+    #- AWS_PROFILE=sba-upper
+    #- POSTGRES_PASSWORD_PSID=/ckan/staging/db_password/postgres
+    #- SMTP_USR_SMID=staging_SES_USER
+    #- SMTP_PWD_SMID=staging_SES_PASSWORD
+    #- APP_UUID_PSID=/ckan/staging/app_uuid
+    #- SESSION_SECRET_PSID=/ckan/staging/session_secret
+    volumes:
+    - ~/.aws/:/root/.aws/
+
+  #datapusher:
+  #  container_name: datapusher
+  #  image: clementmouchet/datapusher
+  #  ports:
+  #  - 8800
+
+  db:
+    container_name: postgres
+    image: postgres:11.1
+    environment:
+    - POSTGRES_PASSWORD=fearless
+    - POSTGRES_USER=ckan_default
+    - POSTGRES_DB=ckan_default
+    ports:
+    - 5432
+
+  solr:
+    container_name: solr
+    build:
+      context: ./solr/
+    ports:
+    - 8983
+
+  redis:
+    container_name: redis
+    image: redis:latest
+    ports:
+    - 6379
