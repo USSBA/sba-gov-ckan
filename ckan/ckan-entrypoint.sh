@@ -115,8 +115,33 @@ CONFIG="${CKAN_CONFIG}/production.ini"
 UNCONFIGURED_CONFIG="${CONFIG}.unconfigured"
 envsubst < $UNCONFIGURED_CONFIG > $CONFIG
 
-# TODO: we should not initialize the database on every container that starts
-# perhasp we can use Cloud9 as a management console for CKAN
+
+function waitfor() {
+  while ! nc -z $1 $2;
+  do
+    echo waiting for $1;
+    sleep 3;
+  done;
+  echo Connected to $1!;
+}
+
+waitfor $POSTGRES_HOST 5432
+waitfor $SOLR_HOST 8983
+waitfor $REDIS_HOST 6379
+
+# Confirm database access
+echo "Running: db version to confirm database access"
+ckan-paster --plugin=ckan db version -c "$CONFIG" || echo "Could not find a ckan database version; maybe it has not been initialized yet."
+
+# TODO: Improve initialization workflow
+# if (database not configured):
+#   db init
+#   db migrate?
+#   sysadmin add admin account
+# else:
+#   do nothing
+
+# TODO: confirm that db init is safe to run every time the container starts
 echo "Running: db init"
 ckan-paster --plugin=ckan db init -c "$CONFIG"
 

@@ -23,7 +23,9 @@ services:
     - POSTGRES_HOST=db
     - SITE_URL=http://localhost
     - REDIS_URL=redis://redis:6379/1
+    - REDIS_HOST=redis
     - SOLR_URL=http://solr:8983/solr/ckan
+    - SOLR_HOST=solr
     # Secrets
     - POSTGRES_PASSWORD=fearless
     - SMTP_USR=fakeuser
