@@ -82,6 +82,30 @@ else
   fi
 fi
 
+## configure session secret
+if [ -z "$SESSION_SECRET" ] && [ -z "$SESSION_SECRET_PSID" ]; then
+  echo "FATAL: SESSION_SECRET or SESSION_SECRET_PSID not configured"
+  CONFIG_ERR=1
+else
+  if [ ! -z "$SESSION_SECRET" ]; then
+    export SESSION_SECRET=${SESSION_SECRET}
+  else
+    export SESSION_SECRET=`aws ssm get-parameter --name ${SESSION_SECRET_PSID} | jq -r .Parameter.Value` || CONFIG_ERR=1
+  fi
+fi
+
+## configure unique id
+if [ -z "$APP_UUID" ] && [ -z "$APP_UUID_PSID" ]; then
+  echo "FATAL: APP_UUID or APP_UUID_PSID not configured"
+  CONFIG_ERR=1
+else
+  if [ ! -z "$APP_UUID" ]; then
+    export APP_UUID=${APP_UUID}
+  else
+    export APP_UUID=`aws ssm get-parameter --name ${APP_UUID_PSID} | jq -r .Parameter.Value` || CONFIG_ERR=1
+  fi
+fi
+
 ## if an error was recorded, exit now
 if [ "$CONFIG_ERR" == "1" ]; then
   echo "Configuration errors above must be corrected before this container can start.  Ensure all environment variables are set properly."
