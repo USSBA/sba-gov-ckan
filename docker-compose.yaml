@@ -10,11 +10,11 @@ services:
       context: ./ckan/
     depends_on:
     - db
-    - solr
+    - ckan-solr
     - redis
     links:
     - db
-    - solr
+    - ckan-solr
     - redis
     ports:
     - 80:80
@@ -58,10 +58,10 @@ services:
     ports:
     - 5432
 
-  solr:
-    container_name: solr
+  ckan-solr:
+    container_name: ckan-solr
     build:
-      context: ./solr/
+      context: ./ckan-solr/
     ports:
     - 8983
 

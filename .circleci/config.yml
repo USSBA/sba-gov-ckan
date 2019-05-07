@@ -1,46 +1,132 @@
 version: 2.1
 
 executors:
-  snyk:
+  default:
     docker:
       - image: circleci/node
+  docker-awscli:
+    docker:
+      - image: ussba/cc-docker-git-aws
+
+commands:
+  dockerbuild:
+    parameters:
+      container:
+        type: string
+    steps:
+      - deploy:
+          name: Build << parameters.container >> container
+          command: |
+            cd << parameters.container >>
+            docker image build -t << parameters.container >> .
+  dockertag:
+    parameters:
+      container:
+        type: string
+    steps:
+      - deploy:
+          name: Tag << parameters.container >> container
+          command: docker tag << parameters.container >> ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/<< parameters.container >>:latest
+  dockerpush:
+    parameters:
+      container:
+        type: string
+    steps:
+      - deploy:
+          name: Push << parameters.container >> container to ECR
+          command: docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/<< parameters.container >>:latest
+  snykscan:
+    parameters:
+      container:
+        type: string
+    steps:
+      - deploy:
+          name: Snyk scan << parameters.container >> container
+          command: snyk test --docker << parameters.container >>:latest --file=<< parameters.container >>/Dockerfile --exclude-base-image-vulns
 
 jobs:
-  snykScanSolr:
-    executor: snyk
-    environment:
-      IMAGE: ckan-solr
+  dockerBuild:
+    executor: default
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - dockerbuild:
+          container: ckan
+      - dockerbuild:
+          container: ckan-solr
+      # - dockerbuild:
+      #     container: ckan-datapusher
+  snykScan:
+    executor: default
     steps:
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
       - run:
-          name: Install Snyk
+          name: Install snyk
           command: sudo npm install -g snyk
+      - snykscan:
+          container: ckan
+      - snykscan:
+          container: ckan-solr
+      # - snykscan:
+      #     container: ckan-datapusher
+  uploadToECR:
+    executor: docker-awscli
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - dockertag:
+          container: ckan
+      - dockertag:
+          container: ckan-solr
       - deploy:
-          name: Build Solr Container
-          command: |
-            cd solr
-            docker image build -t $IMAGE .
-      - deploy:
-          name: Scan Solr Container
-          command: snyk test --docker $IMAGE:latest --file=solr/Dockerfile
+          name: ECR login
+          command: $(aws ecr get-login --no-include-email --region ${AWS_DEFAULT_REGION})
+      - dockerpush:
+          container: ckan
+      - dockerpush:
+          container: ckan-solr
+      # - dockerpush:
+      #     container: ckan-datapusher
 
 workflows:
   version: 2
   featureBranch:
     jobs:
-      - snykScanSolr:
+      - dockerBuild:
+          filters:
+            branches:
+              ignore:
+                - master
+      - snykScan:
           context: snyk
+          requires:
+            - dockerBuild
           filters:
             branches:
               ignore:
                   - master
   masterBranch:
     jobs:
-      - snykScanSolr:
+      - dockerBuild:
+          filters:
+            branches:
+              only: master
+      - snykScan:
+          requires:
+            - dockerBuild
           context: snyk
           filters:
             branches:
-              only:
-                  - master
+              only: master
+      - uploadToECR:
+          context: sba-gov-upper
+          requires:
+            - dockerBuild
+            - snykScan
+          filters:
+            branches:
+              only: master
