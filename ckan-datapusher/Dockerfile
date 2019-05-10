@@ -35,6 +35,7 @@ RUN git clone -b '0.0.10' https://github.com/ckan/datapusher.git
 
 # install datapusher and it's dependencies
 WORKDIR $DATAPUSHER_HOME/src/datapusher
+#COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt && pip install -e .
 
 # entrypoint configuration
@@ -42,7 +43,7 @@ COPY docker-entrypoint.sh /docker-entrypoint.sh
 COPY datapusher_settings.py $DATAPUSHER_HOME/src/datapusher/deployment/datapusher_settings.py.unconfigured
 RUN chmod 700 /docker-entrypoint.sh
 
+# configure and run the datapusher service
 EXPOSE 8800
-
-#Run the DataPusher
+ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD [ "python", "datapusher/main.py", "deployment/datapusher_settings.py"]

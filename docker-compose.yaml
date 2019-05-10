@@ -16,12 +16,12 @@ services:
       context: ./ckan/
     depends_on:
     - db
-    - ckan-solr
+    - solr
     - redis
     - datapusher
     links:
     - db
-    - ckan-solr
+    - solr
     - redis
     - datapusher
     ports:
@@ -54,7 +54,7 @@ services:
     - ckan:/var/lib/ckan/
 
   datapusher:
-    container_name: ckan-datapusher
+    container_name: datapusher
     image: ckan-datapusher
     build:
       context: ./ckan-datapusher/
@@ -79,7 +79,7 @@ services:
     - postgres:/var/lib/postgresql/data/
 
   solr:
-    container_name: ckan-solr
+    container_name: solr
     image: ckan-solr
     build:
       context: ./ckan-solr/

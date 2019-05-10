@@ -10,7 +10,6 @@ NAME = 'datapusher'
 
 # database
 
-#SQLALCHEMY_DATABASE_URI = 'sqlite:////tmp/job_store.db'
 SQLALCHEMY_DATABASE_URI = 'postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}/${POSTGRES_DB}'
 
 # webserver host and port
