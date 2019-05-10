@@ -2,20 +2,28 @@ version: '3'
 # psql -t -l postgresql://ckan_default:Fearless@db/ckan_default
 # https://docs.ckan.org/en/ckan-2.7.3/maintaining/configuration.html
 # https://docs.ckan.org/projects/datapusher/en/latest/development.html
+volumes:
+  ckan:
+  solr:
+  postgres:
+
 services:
 
   ckan:
     container_name: ckan
+    image: ckan
     build:
       context: ./ckan/
     depends_on:
     - db
     - ckan-solr
     - redis
+    - datapusher
     links:
     - db
     - ckan-solr
     - redis
+    - datapusher
     ports:
     - 80:80
     environment:
@@ -26,6 +34,8 @@ services:
     - REDIS_HOST=redis
     - SOLR_URL=http://solr:8983/solr/ckan
     - SOLR_HOST=solr
+    - DATAPUSHER_HOST=datapusher
+    - DATAPUSHER_URL=http://datapusher:8800
     # Secrets
     - POSTGRES_PASSWORD=fearless
     - SMTP_USR=fakeuser
@@ -41,12 +51,20 @@ services:
     #- SESSION_SECRET_PSID=/ckan/staging/session_secret
     volumes:
     - ~/.aws/:/root/.aws/
+    - ckan:/var/lib/ckan/
 
-  #datapusher:
-  #  container_name: datapusher
-  #  image: clementmouchet/datapusher
-  #  ports:
-  #  - 8800
+  datapusher:
+    container_name: ckan-datapusher
+    image: ckan-datapusher
+    build:
+      context: ./ckan-datapusher/
+    ports:
+    - 8800
+    environment:
+    # Environment Specific
+    - POSTGRES_HOST=db
+    # Secrets
+    - POSTGRES_PASSWORD=fearless
 
   db:
     container_name: postgres
@@ -57,13 +75,18 @@ services:
     - POSTGRES_DB=ckan_default
     ports:
     - 5432
+    volumes:
+    - postgres:/var/lib/postgresql/data/
 
-  ckan-solr:
+  solr:
     container_name: ckan-solr
+    image: ckan-solr
     build:
       context: ./ckan-solr/
     ports:
     - 8983
+    volumes:
+    - solr:/opt/solr/server/solr/ckan/data/
 
   redis:
     container_name: redis

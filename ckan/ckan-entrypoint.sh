@@ -115,29 +115,6 @@ else
   echo "All environment variables are properly set."
 fi
 
-# DATASTORE/DATAPUSHER STUFF
-# until psql "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db/${POSTGRES_DB}" -c '\q'; do
-#   >&2 echo "Postgres is unavailable - sleeping"
-#   sleep 1
-# done
-# DB_RESULT=`psql -t -l "${CKAN_SQLALCHEMY_URL}" | cut -d'|' -f1 | grep -oh "${POSTGRES_DATASTORE_DB}" || :`
-# if [ "$DB_RESULT" != "${POSTGRES_DATASTORE_DB}" ]; then
-#   echo "Creating Database for CKAN datastore extension"
-#   #psql -e "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db/${POSTGRES_DB}" <<-EOSQL
-#   psql -a "${CKAN_SQLALCHEMY_URL}" <<-EOSQL
-#     CREATE ROLE ${POSTGRES_DATASTORE_USER} NOSUPERUSER NOCREATEDB NOCREATEROLE LOGIN PASSWORD '$POSTGRES_PASSWORD';
-#     CREATE DATABASE ${POSTGRES_DATASTORE_DB} OWNER ${POSTGRES_USER} ENCODING 'utf-8';
-#     -- GRANT ALL PRIVILEGES ON DATABASE ${POSTGRES_DATASTORE_DB} TO ${POSTGRES_USER};
-#     -- CREATE EXTENSION POSTGIS;
-#     -- ALTER VIEW geometry_columns OWNER TO ${POSTGRES_USER};
-#     -- ALTER TABLE spatial_ref_sys OWNER TO ${POSTGRES_USER};
-# EOSQL
-# fi
-
-echo "Running: envsubst"
-CONFIG="${CKAN_CONFIG}/production.ini"
-UNCONFIGURED_CONFIG="${CONFIG}.unconfigured"
-envsubst < $UNCONFIGURED_CONFIG > $CONFIG
 
 
 function waitfor() {
@@ -152,10 +129,7 @@ function waitfor() {
 waitfor $POSTGRES_HOST 5432
 waitfor $SOLR_HOST 8983
 waitfor $REDIS_HOST 6379
-
-# Confirm database access
-echo "Running: db version to confirm database access"
-ckan-paster --plugin=ckan db version -c "$CONFIG" || echo "Could not find a ckan database version; maybe it has not been initialized yet."
+waitfor $DATAPUSHER_HOST 8800
 
 # TODO: Improve initialization workflow
 # if (database not configured):
@@ -165,15 +139,43 @@ ckan-paster --plugin=ckan db version -c "$CONFIG" || echo "Could not find a ckan
 # else:
 #   do nothing
 
-# TODO: confirm that db init is safe to run every time the container starts
+# create the datastore_user if it does not exist
+export DATASTORE_ROLENAME=datastore_default
+read rolname <<< `psql -X "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}/${POSTGRES_DB}" --single-transaction --set ON_ERROR_STOP=1 --no-align -t --field-separator ' ' --quiet -c "SELECT rolname FROM pg_catalog.pg_roles WHERE rolname = '$DATASTORE_ROLENAME'"`
+if [ "${rolname}" != "${DATASTORE_ROLENAME}" ]; then
+  echo "Creating the '$DATASTORE_ROLENAME' role"
+  psql "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}/${POSTGRES_DB}" -c "CREATE ROLE ${DATASTORE_ROLENAME} NOSUPERUSER NOCREATEDB NOCREATEROLE LOGIN PASSWORD '${POSTGRES_PASSWORD}'"
+else
+  echo "The '$DATASTORE_ROLENAME' role already exists"
+fi
+
+# create the datastore database if it does not exists
+export DATASTORE_DB=datastore_default
+read datname <<< `psql -X "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}/${POSTGRES_DB}" --single-transaction --set ON_ERROR_STOP=1 --no-align -t --field-separator ' ' --quiet -c "SELECT datname FROM pg_catalog.pg_database WHERE datname = '$DATASTORE_DB'"`
+if [ "${datname}" != "${DATASTORE_DB}" ]; then
+  echo "Creating the '$DATASTORE_DB' database catalog"
+  psql "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}/${POSTGRES_DB}" -c "CREATE DATABASE ${DATASTORE_DB} OWNER ${POSTGRES_USER} ENCODING 'utf-8'"
+  psql "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}/${POSTGRES_DB}" -c "GRANT ALL PRIVILEGES ON DATABASE ${DATASTORE_DB} TO ${POSTGRES_USER}"
+else
+  echo "The '$DATASTORE_DB' role already exists"
+fi
+
+echo "Running: envsubst"
+CONFIG="${CKAN_CONFIG}/production.ini"
+UNCONFIGURED_CONFIG="${CONFIG}.unconfigured"
+envsubst < $UNCONFIGURED_CONFIG > $CONFIG
+
 echo "Running: db init"
 ckan-paster --plugin=ckan db init -c "$CONFIG"
+
+echo "Running: datastore set-permissions"
+ckan-paster --plugin=ckan datastore set-permissions -c ${CONFIG} | psql "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}/${DATASTORE_DB}" --set ON_ERROR_STOP=1
 
 # TODO: we may need to only run this line if the user does not exist...
 # running subsequent times no updates to the user will occur meaning the password/email will not
 # change once the user is created; that will need to be done via browser
 # perhasp we can use Cloud9 as a management console for CKAN
-echo "Running: ckan-paster (creating sysadmin account)"
+echo "Running: sysadmin add"
 yes | ckan-paster --plugin=ckan sysadmin add ias email=sbaias@fearless.tech password=${POSTGRES_PASSWORD} --config "$CONFIG"
 
 # DATASTORE/DATAPUSHER STUFF
