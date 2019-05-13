@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -xe
 
 echo "Starting EntryPoint"
 export POSTGRES_DB=${POSTGRES_DB:-ckan_default}

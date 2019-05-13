@@ -39,11 +39,12 @@ WORKDIR $DATAPUSHER_HOME/src/datapusher
 RUN pip install -r requirements.txt && pip install -e .
 
 # entrypoint configuration
-COPY docker-entrypoint.sh /docker-entrypoint.sh
-COPY datapusher_settings.py $DATAPUSHER_HOME/src/datapusher/deployment/datapusher_settings.py.unconfigured
-RUN chmod 700 /docker-entrypoint.sh
+# COPY docker-entrypoint.sh /docker-entrypoint.sh
+# COPY datapusher_settings.py $DATAPUSHER_HOME/src/datapusher/deployment/datapusher_settings.py.unconfigured
+# RUN chmod 700 /docker-entrypoint.sh
 
 # configure and run the datapusher service
 EXPOSE 8800
-ENTRYPOINT ["/docker-entrypoint.sh"]
+# ENTRYPOINT ["/docker-entrypoint.sh"]
+# CMD ["python", "--version"]
 CMD [ "python", "datapusher/main.py", "deployment/datapusher_settings.py"]
