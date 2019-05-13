@@ -8,16 +8,19 @@ RUN apt-get update \
         python-dev \
         python-pip \
         python-virtualenv \
+        python-psycopg2 \
         build-essential \
         libxslt1-dev \
         libxml2-dev \
         zlib1g-dev \
         git \
         gettext-base \
+        postgresql-client \
     && apt-get -y autoremove \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && pip install -U pip
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install -U pip
 
 # create home directory of datapusher
 RUN mkdir -p $DATAPUSHER_HOME/src
@@ -39,12 +42,11 @@ WORKDIR $DATAPUSHER_HOME/src/datapusher
 RUN pip install -r requirements.txt && pip install -e .
 
 # entrypoint configuration
-# COPY docker-entrypoint.sh /docker-entrypoint.sh
-# COPY datapusher_settings.py $DATAPUSHER_HOME/src/datapusher/deployment/datapusher_settings.py.unconfigured
-# RUN chmod 700 /docker-entrypoint.sh
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+COPY datapusher_settings.py $DATAPUSHER_HOME/src/datapusher/deployment/datapusher_settings.py.unconfigured
+RUN chmod 700 /docker-entrypoint.sh
 
 # configure and run the datapusher service
 EXPOSE 8800
-# ENTRYPOINT ["/docker-entrypoint.sh"]
-# CMD ["python", "--version"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD [ "python", "datapusher/main.py", "deployment/datapusher_settings.py"]

@@ -59,7 +59,7 @@ services:
     build:
       context: ./ckan-datapusher/
     ports:
-    - 8800
+    - 8800:8800
     environment:
     # Environment Specific
     - POSTGRES_HOST=db
@@ -84,7 +84,7 @@ services:
     build:
       context: ./ckan-solr/
     ports:
-    - 8983
+    - 8983:8983
     volumes:
     - solr:/opt/solr/server/solr/ckan/data/
 

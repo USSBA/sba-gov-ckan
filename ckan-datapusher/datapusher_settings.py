@@ -14,7 +14,8 @@ SQLALCHEMY_DATABASE_URI = 'postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${
 
 # webserver host and port
 
-HOST = '0.0.0.0'
+# HOST = '0.0.0.0'
+HOST = 'datapusher'
 PORT = 8800
 
 # logging
