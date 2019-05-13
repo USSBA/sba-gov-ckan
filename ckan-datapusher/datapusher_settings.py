@@ -10,12 +10,13 @@ NAME = 'datapusher'
 
 # database
 
-SQLALCHEMY_DATABASE_URI = 'postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}/${POSTGRES_DB}'
+# SQLALCHEMY_DATABASE_URI = 'postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}/${POSTGRES_DB}'
+SQLALCHEMY_DATABASE_URI = 'sqlite:////tmp/job_store.db'
 
 # webserver host and port
 
 # HOST = '0.0.0.0'
-HOST = 'datapusher'
+HOST = 'localhost'
 PORT = 8800
 
 # logging
@@ -23,6 +24,9 @@ PORT = 8800
 #FROM_EMAIL = 'server-error@example.com'
 #ADMINS = ['yourname@example.com']  # where to send emails
 
-#LOG_FILE = '/tmp/ckan_service.log'
+LOG_FILE = '/tmp/ckan_service.log'
 STDERR = True
 
+
+SSL_VERIFY = False
+MAX_CONTENT_LENGTH = 73400320

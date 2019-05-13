@@ -10,7 +10,8 @@ DATAPUSHER_HOME="/usr/lib/ckan/datapusher/src/datapusher"
 CONFIG_TEMPLATE="$DATAPUSHER_HOME/deployment/datapusher_settings.py.unconfigured"
 CONFIG="$DATAPUSHER_HOME/deployment/datapusher_settings.py"
 
-echo "Running: envsubst"
-envsubst < $CONFIG_TEMPLATE > $CONFIG
-
+# echo "Running: envsubst"
+# envsubst < $CONFIG_TEMPLATE > $CONFIG
+# sed -i "s/HOST = '0.0.0.0'/HOST = 'datapusher'/" $CONFIG
+cp $CONFIG_TEMPLATE $CONFIG
 exec "$@"

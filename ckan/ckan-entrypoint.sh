@@ -120,10 +120,10 @@ fi
 function waitfor() {
   while ! nc -z $1 $2;
   do
-    echo waiting for $1;
+    echo waiting for ${1}:${2};
     sleep 3;
   done;
-  echo Connected to $1!;
+  echo Connected to ${1}:${2};
 }
 
 waitfor $POSTGRES_HOST 5432
