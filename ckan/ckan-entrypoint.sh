@@ -2,12 +2,10 @@
 
 setenv-by-psid() {
   # retrieve the value from parameter store
-  local error_msg="Could not retrieve \"$2\" from ParameterStore"
   aws ssm get-parameter --name $2 --query Parameter.Value --output text
   if [ $? -ne 0 ]; then
-    echo $error_msg
-    exit 10
-    return 10
+    echo "Could not retrieve \"$2\" from ParameterStore"
+    exit 10; return 10;
   else
     export $1=`aws ssm get-parameter --name $2 --query Parameter.Value --output text`
   fi
@@ -15,12 +13,10 @@ setenv-by-psid() {
 
 setenv-by-smid() {
   # retrieve the value from secrets manager
-  local error_msg="Could not retrieve \"$2\" from SecretsManager"
   aws secretsmanager get-secret-value --secret-id $2 --query SecretString --output text
   if [ $? -ne 0 ]; then
-    echo $error_msg
-    exit 10
-    return 10
+    echo "Could not retrieve \"$2\" from SecretsManager"
+    exit 10; return 10;
   else
     export $1=`aws secretsmanager get-secret-value --secret-id $2 --query SecretString --output text`
   fi
