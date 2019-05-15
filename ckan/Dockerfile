@@ -20,7 +20,6 @@ RUN apt-get -q -y update \
         vim \
         wget \
         gettext-base \
-        jq \
         netcat \
     && apt-get -q clean \
     && pip install awscli \

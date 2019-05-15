@@ -1,121 +1,127 @@
 #!/bin/bash -e
-## configuring ckan
-## https://docs.ckan.org/en/ckan-2.7.3/maintaining/configuration.html
-## https://docs.ckan.org/en/2.8/maintaining/getting-started.html#create-admin-user
 
-export POSTGRES_USER=${POSTGRES_USER:-ckan_default}
+setenv-by-psid() {
+  # retrieve the value from parameter store
+  local error_msg="Could not retrieve \"$2\" from ParameterStore"
+  aws ssm get-parameter --name $1 --query Parameter.Value --output text
+  if [ $? -ne 0 ]; then
+    echo $error_msg
+    exit 10
+    return 10
+  else
+    export $1=`aws ssm get-parameter --name $1 --query Parameter.Value --output text`
+  fi
+}
+
+setenv-by-smid() {
+  # retrieve the value from secrets manager
+  local error_msg="Could not retrieve \"$2\" from SecretsManager"
+  aws secretsmanager get-secret-value --secret-id $1 --query SecretString --output text
+  if [ $? -ne 0 ]; then
+    echo $error_msg
+    exit 10
+    return 10
+  else
+    export $1=`aws secretsmanager get-secret-value --secret-id $1 --query SecretString --output text`
+  fi
+}
+
+ERROR=0
+
+# CKAN
+# configuration for the ckan application
+
+export CKAN_PORT=${CKAN_PORT:-80}
+export CKAN_SITE_ID=${CKAN_SITE_ID:-default}
+([ ! -z "$CKAN_SITE_URL" ] && export CKAN_SITE_URL=$CKAN_SITE_URL) || (echo "FATAL: CKAN_SITE_URL is not configured" && ERROR=1)
+if [ -z "SESSION_SECRET" ] && [ -z "SESSION_SECRET_PSID" ]; then
+  echo "FATAL: SESSION_SECRET or SESSION_SECRET_PSID is not configured" && ERROR=1
+else
+  ([ ! -z "$SESSION_SECRET" ] && export SESSION_SECRET=$SESSION_SECRET) || setenv-by-psid SESSION_SECRET $SESSION_SECRET_PSID || ERROR=1
+fi
+if [ -z "APP_UUID" ] && [ -z "APP_UUID_PSID" ]; then
+  echo "FATAL: APP_UUID or APP_UUID_PSID is not configured" && ERROR=1
+else
+  ([ ! -z "$APP_UUID" ] && export APP_UUID=$APP_UUID) || setenv-by-psid APP_UUID $APP_UUID_PSID || ERROR=1
+fi
+
+# POSTGRES
+# configuration for the postgresql database
+
 export POSTGRES_DB=${POSTGRES_DB:-ckan_default}
-export SITE_ID=${SITE_ID:-default}
-
-CONFIG_ERR=0
-
-## configure the postgres databae host name
-if [ -z "$POSTGRES_HOST" ]; then
-  echo "FATAL: POSTGRES_HOST not configured"
-  CONFIG_ERR=1
+export POSTGRES_USER=${POSTGRES_USER:-ckan_default}
+export POSTGRES_PORT=${POSTGRES_PORT:-5432}
+if [ -z "POSTGRES_PASSWORD" ] && [ -z "POSTGRES_PASSWORD_PSID" ]; then
+  echo "FATAL: POSTGRES_PASSWORD or POSTGRES_PASSWORD_PSID is not configured" && ERROR=1
 else
-  export POSTGRES_HOST=${POSTGRES_HOST}
+  ([ ! -z "$POSTGRES_PASSWORD" ] && export POSTGRES_PASSWORD=$POSTGRES_PASSWORD) || setenv-by-psid POSTGRES_PASSWORD $POSTGRES_PASSWORD_PSID || ERROR=1
 fi
+([ ! -z "$POSTGRES_FQDN" ] && export POSTGRES_FQDN=$POSTGRES_FQDN) || (echo "FATAL: POSTGRES_FQDN is not configured" && ERROR=1)
+export CKAN_SQLALCHEMY_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_FQDN}/${POSTGRES_DB}
 
-## configure the ckan sites name
-## ex: https://hostname:port
-## note: omit a trailing slash
-## note: this is required for internal redirection and must match the domain name exactly
-if [ -z "$SITE_URL" ]; then
-  echo "FATAL: SITE_URL not configured"
-  CONFIG_ERR=1
+# DATASTORE
+# configuration for the datastore database
+
+export DATASTORE_DB=${DATASTORE_DB:-datastore_default}
+export DATASTORE_ROLENAME=${DATASTORE_ROLENAME:-datastore_default}
+export CKAN_DATASTORE_WRITE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_FQDN}/${DATASTORE_DB}
+export CKAN_DATASTORE_READ_URL=postgresql://${DATASTORE_ROLENAME}:${POSTGRES_PASSWORD}@${POSTGRES_FQDN}/${DATASTORE_DB}
+
+# REDIS
+# configuration for the redis database
+
+export REDIS_PORT=${REDIS_PORT:-6379}
+export REIDS_DBID=${REDIS_DBID:-1}
+([ ! -z "$REDIS_FQDN" ] && export REDIS_FQDN=$REDIS_FQDN) || (echo "FATAL: REDIS_FQDN is not configured" && ERROR=1)
+export CKAN_REDIS_URL=redis://${REDIS_FQDN}:${REDIS_PORT}/${REDIS_DBID}
+
+# SOLR
+# configuration for the solr database
+
+export SOLR_PORT=${SOLR_PORT:-8983}
+export SOLR_CORE_NAME=${SOLR_CORE_NAME:-ckan}
+export SOLR_HTTP_SCHEME=${SOLR_HTTP_SCHEME:-http}
+([ ! -z "$SOLR_FQDN" ] && export SOLR_FQDN=$SOLR_FQDN) || (echo "FATAL: SOLR_FQDN is not configured" && ERROR=1)
+export CKAN_SOLR_URL=${SOLR_HTTP_SCHEME}://${SOLR_FQDN}:${SOLR_PORT}/solr/${SOLR_CORE_NAME}
+
+# DATAPUSHER
+# configuration for the datapusher
+
+export DATAPUSHER_PORT=${DATAPUSHER:-8800}
+export DATAPUSHER_HTTP_SCHEME=${DATAPUSHER_HTTP_SCHEME:-http}
+([ ! -z "$DATAPUSHER_FQDN" ] && export DATAPUSHER_FQDN=$DATAPUSHER_FQDN) || (echo "FATAL: DATAPUSHER_FQDN is not configured" && ERROR=1)
+export CKAN_DATAPUSHER_URL=${DATAPUSHER_HTTP_SCHEME}://${DATAPUSHER_FQDN}:${DATAPUSHER_PORT}
+
+# SMTP
+# configuration for the smtp
+
+export SMTP_FQDN=${SMTP_FQDN:-email-smtp.us-east-1.amazonaws.com}
+export SMTP_PORT=${SMTP_PORT:-587}
+export CKAN_SMTP_STARTTLS=${CKAN_SMTP_STARTTLS:-True}
+export CKAN_SMTP_SERVER=${SMTP_FQDN}:${SMTP_PORT}
+if [ -z "$CKAN_SMTP_USER" ] && [ -z "$CKAN_SMTP_USER_SMID" ]; then
+  echo "FATAL: CKAN_SMTP_USER or CKAN_SMTP_USER_SMID is not configured" && ERROR=1
 else
-  export SITE_URL=${SITE_URL}
+  ([ ! -z "$CKAN_SMTP_USER" ] && export CKAN_SMTP_USER=$CKAN_SMTP_USER) || setenv-by-smid CKAN_SMTP_USER $CKAN_SMTP_USER_SMID || ERROR=1
 fi
-
-## configure the redis endpoint url including the database id
-## ex: redis://redis-host:port/1
-if [ -z "$REDIS_URL" ]; then
-  echo "FATAL: REDIS_URL not configured"
-  CONFIG_ERR=1
+if [ -z "$CKAN_SMTP_PASSWORD" ] && [ -z "$CKAN_SMTP_PASSWORD_SMID" ]; then
+  echo "FATAL: CKAN_SMTP_PASSWORD or CKAN_SMTP_PASSWORD_SMID is not configured" && ERROR=1
 else
-  export REDIS_URL=${REDIS_URL}
+  ([ ! -z "$CKAN_SMTP_PASSWORD" ] && export CKAN_SMTP_PASSWORD=$CKAN_SMTP_PASSWORD) || setenv-by-smid CKAN_SMTP_PASSWORD $CKAN_SMTP_PASSWORD_SMID || ERROR=1
 fi
+([ ! -z "$CKAN_SMTP_MAIL_TO" ] && export CKAN_SMTP_MAIL_TO=$CKAN_SMTP_MAIL_TO) || (echo "FATAL: CKAN_SMTP_MAIL_TO is not configured" && ERROR=1)
+([ ! -z "$CKAN_SMTP_MAIL_FROM" ] && export CKAN_SMTP_MAIL_FROM=$CKAN_SMTP_MAIL_FROM) || (echo "FATAL: CKAN_SMTP_MAIL_FROM is not configured" && ERROR=1)
 
-## configure solr url/solr core endpoint url
-## ex: http://solr-host:port/solr/ckan
-if [ -z "$SOLR_URL" ]; then
-  echo "FATAL: SOLR_URL not configured"
-  CONFIG_ERR=1
-else
-  export SOLR_URL=${SOLR_URL}
-fi
+# ERROR
+# if any configuration errors have occured, we will need to exit
 
-## configure password for the database
-if [ -z "$POSTGRES_PASSWORD" ] && [ -z "$POSTGRES_PASSWORD_PSID" ]; then
-  echo "FATAL: POSTGRES_PASSWORD or POSTGRES_PASSWORD_PSID not configured"
-  CONFIG_ERR=1
-else
-  if [ ! -z "$POSTGRES_PASSWORD" ]; then
-    export POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-  else
-    export POSTGRES_PASSWORD=`aws ssm get-parameter --name ${POSTGRES_PASSWORD_PSID} | jq -r .Parameter.Value` || CONFIG_ERR=1
-  fi
-fi
-
-## configure the smtp user name
-if [ -z "$SMTP_USR" ] && [ -z "$SMTP_USR_SMID" ]; then
-  echo "FATAL: SMTP_USR or SMTP_USR_SMID not configured"
-  CONFIG_ERR=1
-else
-  if [ ! -z "$SMTP_USR" ]; then
-    export SMTP_USR=${SMTP_USR}
-  else
-    export SMTP_USR=`aws secretsmanager get-secret-value --secret-id ${SMTP_USR_SMID} | jq -r .SecretString` || CONFIG_ERR=1
-  fi
-fi
-
-## configure smtp user password
-if [ -z "$SMTP_PWD" ] && [ -z "$SMTP_PWD_SMID" ]; then
-  echo "FATAL: SMTP_PWD or SMTP_PWD_SMID not configured"
-  CONFIG_ERR=1
-else
-  if [ ! -z "$SMTP_PWD" ]; then
-    export SMTP_PWD=${SMTP_PWD}
-  else
-    export SMTP_PWD=`aws secretsmanager get-secret-value --secret-id ${SMTP_PWD_SMID} | jq -r .SecretString` || CONFIG_ERR=1
-  fi
-fi
-
-## configure session secret
-if [ -z "$SESSION_SECRET" ] && [ -z "$SESSION_SECRET_PSID" ]; then
-  echo "FATAL: SESSION_SECRET or SESSION_SECRET_PSID not configured"
-  CONFIG_ERR=1
-else
-  if [ ! -z "$SESSION_SECRET" ]; then
-    export SESSION_SECRET=${SESSION_SECRET}
-  else
-    export SESSION_SECRET=`aws ssm get-parameter --name ${SESSION_SECRET_PSID} | jq -r .Parameter.Value` || CONFIG_ERR=1
-  fi
-fi
-
-## configure unique id
-if [ -z "$APP_UUID" ] && [ -z "$APP_UUID_PSID" ]; then
-  echo "FATAL: APP_UUID or APP_UUID_PSID not configured"
-  CONFIG_ERR=1
-else
-  if [ ! -z "$APP_UUID" ]; then
-    export APP_UUID=${APP_UUID}
-  else
-    export APP_UUID=`aws ssm get-parameter --name ${APP_UUID_PSID} | jq -r .Parameter.Value` || CONFIG_ERR=1
-  fi
-fi
-
-## if an error was recorded, exit now
-if [ "$CONFIG_ERR" == "1" ]; then
+if [ $ERROR -eq 1 ]; then
   echo "Configuration errors above must be corrected before this container can start.  Ensure all environment variables are set properly."
   echo "$@" >&2
   exit 1
 else
   echo "All environment variables are properly set."
 fi
-
-
 
 function waitfor() {
   while ! nc -z $1 $2;
@@ -126,10 +132,10 @@ function waitfor() {
   echo Connected to ${1}:${2};
 }
 
-waitfor $POSTGRES_HOST 5432
-waitfor $SOLR_HOST 8983
-waitfor $REDIS_HOST 6379
-waitfor $DATAPUSHER_HOST 8800
+waitfor $POSTGRES_FQDN 5432
+waitfor $SOLR_FQDN 8983
+waitfor $REDIS_FQDN 6379
+waitfor $DATAPUSHER_FQDN 8800
 
 # TODO: Improve initialization workflow
 # if (database not configured):
@@ -140,22 +146,20 @@ waitfor $DATAPUSHER_HOST 8800
 #   do nothing
 
 # create the datastore_user if it does not exist
-export DATASTORE_ROLENAME=datastore_default
-read rolname <<< `psql -X "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}/${POSTGRES_DB}" --single-transaction --set ON_ERROR_STOP=1 --no-align -t --field-separator ' ' --quiet -c "SELECT rolname FROM pg_catalog.pg_roles WHERE rolname = '$DATASTORE_ROLENAME'"`
+read rolname <<< `psql -X "$CKAN_SQLALCHEMY_URL" --single-transaction --set ON_ERROR_STOP=1 --no-align -t --field-separator ' ' --quiet -c "SELECT rolname FROM pg_catalog.pg_roles WHERE rolname = '$DATASTORE_ROLENAME'"`
 if [ "${rolname}" != "${DATASTORE_ROLENAME}" ]; then
   echo "Creating the '$DATASTORE_ROLENAME' role"
-  psql "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}/${POSTGRES_DB}" -c "CREATE ROLE ${DATASTORE_ROLENAME} NOSUPERUSER NOCREATEDB NOCREATEROLE LOGIN PASSWORD '${POSTGRES_PASSWORD}'"
+  psql "$CKAN_SQLALCHEMY_URL" -c "CREATE ROLE ${DATASTORE_ROLENAME} NOSUPERUSER NOCREATEDB NOCREATEROLE LOGIN PASSWORD '${POSTGRES_PASSWORD}'"
 else
   echo "The '$DATASTORE_ROLENAME' role already exists"
 fi
 
 # create the datastore database if it does not exists
-export DATASTORE_DB=datastore_default
-read datname <<< `psql -X "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}/${POSTGRES_DB}" --single-transaction --set ON_ERROR_STOP=1 --no-align -t --field-separator ' ' --quiet -c "SELECT datname FROM pg_catalog.pg_database WHERE datname = '$DATASTORE_DB'"`
+read datname <<< `psql -X "$CKAN_SQLALCHEMY_URL" --single-transaction --set ON_ERROR_STOP=1 --no-align -t --field-separator ' ' --quiet -c "SELECT datname FROM pg_catalog.pg_database WHERE datname = '$DATASTORE_DB'"`
 if [ "${datname}" != "${DATASTORE_DB}" ]; then
   echo "Creating the '$DATASTORE_DB' database catalog"
-  psql "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}/${POSTGRES_DB}" -c "CREATE DATABASE ${DATASTORE_DB} OWNER ${POSTGRES_USER} ENCODING 'utf-8'"
-  psql "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}/${POSTGRES_DB}" -c "GRANT ALL PRIVILEGES ON DATABASE ${DATASTORE_DB} TO ${POSTGRES_USER}"
+  psql "$CKAN_SQLALCHEMY_URL" -c "CREATE DATABASE ${DATASTORE_DB} OWNER ${POSTGRES_USER} ENCODING 'utf-8'"
+  psql "$CKAN_SQLALCHEMY_URL" -c "GRANT ALL PRIVILEGES ON DATABASE ${DATASTORE_DB} TO ${POSTGRES_USER}"
 else
   echo "The '$DATASTORE_DB' role already exists"
 fi
@@ -169,17 +173,15 @@ echo "Running: db init"
 ckan-paster --plugin=ckan db init -c "$CONFIG"
 
 echo "Running: datastore set-permissions"
-ckan-paster --plugin=ckan datastore set-permissions -c ${CONFIG} | psql "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}/${DATASTORE_DB}" --set ON_ERROR_STOP=1
+ckan-paster --plugin=ckan datastore set-permissions -c ${CONFIG} | psql "$CKAN_DATASTORE_WRITE_URL" --set ON_ERROR_STOP=1
 
 # TODO: we may need to only run this line if the user does not exist...
 # running subsequent times no updates to the user will occur meaning the password/email will not
 # change once the user is created; that will need to be done via browser
 # perhasp we can use Cloud9 as a management console for CKAN
+
 echo "Running: sysadmin add"
 yes | ckan-paster --plugin=ckan sysadmin add ias email=sbaias@fearless.tech password=${POSTGRES_PASSWORD} --config "$CONFIG"
 
-# DATASTORE/DATAPUSHER STUFF
-# ckan-paster --plugin=ckan datastore set-permissions -c "${CKAN_CONFIG}/production.ini" | \
-#   psql -a "${CKAN_SQLALCHEMY_URL}" --set ON_ERROR_STOP=1
 echo "Runing: exec"
 exec "$@"

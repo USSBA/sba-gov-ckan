@@ -8,14 +8,12 @@ RUN apt-get update \
         python-dev \
         python-pip \
         python-virtualenv \
-        python-psycopg2 \
         build-essential \
         libxslt1-dev \
         libxml2-dev \
         zlib1g-dev \
         git \
         gettext-base \
-        postgresql-client \
     && apt-get -y autoremove \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*

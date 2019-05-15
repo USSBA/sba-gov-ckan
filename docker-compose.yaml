@@ -15,11 +15,11 @@ services:
     build:
       context: ./ckan/
     network_mode: host
-    depends_on:
-    - db
-    - solr
-    - redis
-    - datapusher
+#    depends_on:
+#    - db
+#    - solr
+#    - redis
+#    - datapusher
 #    links:
 #    - db
 #    - solr
@@ -31,31 +31,25 @@ services:
     - 80
     environment:
     # Environment Specific
-#    - POSTGRES_HOST=db
-    - POSTGRES_HOST=localhost
-    - SITE_URL=http://localhost
-#    - REDIS_URL=redis://redis:6379/1
-    - REDIS_URL=redis://localhost:6379/1
-#    - REDIS_HOST=redis
-    - REDIS_HOST=localhost
-#    - SOLR_URL=http://solr:8983/solr/ckan
-    - SOLR_URL=http://localhost:8983/solr/ckan
-#    - SOLR_HOST=solr
-    - SOLR_HOST=localhost
-#    - DATAPUSHER_URL=http://datapusher:8800
-    - DATAPUSHER_URL=http://localhost:8800
-#    - DATAPUSHER_HOST=datapusher
-    - DATAPUSHER_HOST=localhost
+    - POSTGRES_FQDN=localhost
+    - REDIS_FQDN=localhost
+    - SOLR_FQDN=localhost
+    - DATAPUSHER_FQDN=localhost
+    - CKAN_SITE_URL=http://localhost
+    - CKAN_SMTP_MAIL_TO=fake@e.mail
+    - CKAN_SMTP_MAIL_FROM=fake@e.mail
+    # (Optional) Defaults to 'email-smtp.us-east-1.amazonaws.com'
+    - SMTP_FQDN=smtp.fake.mail
     # Secrets
     - POSTGRES_PASSWORD=fearless
-    - SMTP_USR=fakeuser
-    - SMTP_PWD=fakepass
-    - APP_UUID=aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb
+    - CKAN_SMTP_USER=fake
+    - CKAN_SMTP_PASSWORD=fake
+    - APP_UUID=AAAAAAAA-0000-1111-2222-BBBBBBBBBBBB
     - SESSION_SECRET=AAAAAAAAAAAAAAAAAAAAAAAAA
     ## To pull from AWS ParameterStore/SecretsManager, use the following:
-    #- AWS_PROFILE=sba-upper
+    - AWS_PROFILE=sba-upper
     #- POSTGRES_PASSWORD_PSID=/ckan/staging/db_password/postgres
-    #- SMTP_USR_SMID=staging_SES_USER
+    #- CKAN_SMTP_USER_SMID=staging_SES_USER
     #- SMTP_PWD_SMID=staging_SES_PASSWORD
     #- APP_UUID_PSID=/ckan/staging/app_uuid
     #- SESSION_SECRET_PSID=/ckan/staging/session_secret
@@ -77,11 +71,7 @@ services:
     #- datapusher:0.0.0.0
     environment:
     # Environment Specific
-    #- POSTGRES_HOST=db
-    - POSTGRES_HOST=localhost
-    # Secrets
-    - POSTGRES_PASSWORD=fearless
-
+    - DATAPUSHER_FQDN=localhost
   db:
     container_name: postgres
     image: postgres:11.1

@@ -4,4 +4,3 @@ html5lib==0.9999999
 messytables==0.15.2
 python-slugify==1.2.1
 requests==2.13.0
-psycopg2
