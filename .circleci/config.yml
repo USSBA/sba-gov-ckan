@@ -82,6 +82,8 @@ jobs:
           container: ckan
       - dockertag:
           container: ckan-solr
+      - dockertag:
+          container: ckan-datapusher
       - deploy:
           name: ECR login
           command: $(aws ecr get-login --no-include-email --region ${AWS_DEFAULT_REGION})
