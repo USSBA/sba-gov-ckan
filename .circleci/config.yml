@@ -55,8 +55,8 @@ jobs:
           container: ckan
       - dockerbuild:
           container: ckan-solr
-      # - dockerbuild:
-      #     container: ckan-datapusher
+      - dockerbuild:
+          container: ckan-datapusher
   snykScan:
     executor: default
     steps:
@@ -70,8 +70,8 @@ jobs:
           container: ckan
       - snykscan:
           container: ckan-solr
-      # - snykscan:
-      #     container: ckan-datapusher
+      - snykscan:
+          container: ckan-datapusher
   uploadToECR:
     executor: docker-awscli
     steps:
@@ -89,8 +89,8 @@ jobs:
           container: ckan
       - dockerpush:
           container: ckan-solr
-      # - dockerpush:
-      #     container: ckan-datapusher
+      - dockerpush:
+          container: ckan-datapusher
 
 workflows:
   version: 2
