@@ -29,14 +29,8 @@ WORKDIR $DATAPUSHER_HOME/src
 # clone the datapusher repository
 RUN git clone -b '0.0.10' https://github.com/ckan/datapusher.git
 
-# install pip
-#RUN apt-get install -y python-pip && \
-#apt-get autoremove -y && \
-#pip install -U pip
-
 # install datapusher and it's dependencies
 WORKDIR $DATAPUSHER_HOME/src/datapusher
-#COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt && pip install -e .
 
 # entrypoint configuration
