@@ -15,16 +15,6 @@ services:
     build:
       context: ./ckan/
     network_mode: host
-#    depends_on:
-#    - db
-#    - solr
-#    - redis
-#    - datapusher
-#    links:
-#    - db
-#    - solr
-#    - redis
-#    - datapusher
     ports:
     - 80:80
     expose:
@@ -66,7 +56,7 @@ services:
     ports:
     - 8800:8800
     expose:
-    - 8080
+    - 8800
     #extra_hosts:
     #- datapusher:0.0.0.0
     environment:
