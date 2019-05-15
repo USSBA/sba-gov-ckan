@@ -128,10 +128,10 @@ function waitfor() {
   echo Connected to ${1}:${2};
 }
 
-waitfor $POSTGRES_FQDN 5432
-waitfor $SOLR_FQDN 8983
-waitfor $REDIS_FQDN 6379
-waitfor $DATAPUSHER_FQDN 8800
+waitfor $POSTGRES_FQDN $POSTGRES_PORT
+waitfor $SOLR_FQDN $SOLR_PORT
+waitfor $REDIS_FQDN $REDIS_PORT
+waitfor $DATAPUSHER_FQDN $DATAPUSHER_PORT
 
 # TODO: Improve initialization workflow
 # if (database not configured):
@@ -157,7 +157,7 @@ if [ "${datname}" != "${DATASTORE_DB}" ]; then
   psql "$CKAN_SQLALCHEMY_URL" -c "CREATE DATABASE ${DATASTORE_DB} OWNER ${POSTGRES_USER} ENCODING 'utf-8'"
   psql "$CKAN_SQLALCHEMY_URL" -c "GRANT ALL PRIVILEGES ON DATABASE ${DATASTORE_DB} TO ${POSTGRES_USER}"
 else
-  echo "The '$DATASTORE_DB' role already exists"
+  echo "The '$DATASTORE_DB' database already exists"
 fi
 
 echo "Running: envsubst"

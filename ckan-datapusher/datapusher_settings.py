@@ -19,11 +19,15 @@ PORT = ${DATAPUSHER_PORT}
 
 # logging
 
+## NOTE:
+## These variables were commented out by default with the source code.
+## Leaving them comments out in the case we should ever need them.
+
 # FROM_EMAIL = 'server-error@example.com'
 # ADMINS = ['yourname@example.com']  # where to send emails
-
 # LOG_FILE = '/tmp/ckan_service.log'
+# SSL_VERIFY = False
+
 STDERR = True
 STDOUT = True
-# SSL_VERIFY = False
 MAX_CONTENT_LENGTH = 73400320
