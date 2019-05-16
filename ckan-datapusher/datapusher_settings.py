@@ -14,7 +14,7 @@ SQLALCHEMY_DATABASE_URI = 'sqlite:////tmp/job_store.db'
 
 # webserver host and port
 
-HOST = '${DATAPUSHER_FQDN}'
+HOST = '0.0.0.0'
 PORT = ${DATAPUSHER_PORT}
 
 # logging
