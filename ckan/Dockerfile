@@ -54,6 +54,9 @@ RUN ckan-pip install -U pip \
     && ln -s $CKAN_VENV/src/ckan/ckan/config/who.ini $CKAN_CONFIG/who.ini \
     && chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
 
+# install pages plugin
+RUN ckan-pip install -e 'git+https://github.com/ckan/ckanext-pages.git#egg=ckanext-pages'
+
 # customize container entrypoint that will configure the application
 COPY ckan-entrypoint.sh /ckan-entrypoint.sh
 COPY production.ini $CKAN_CONFIG/production.ini.unconfigured
