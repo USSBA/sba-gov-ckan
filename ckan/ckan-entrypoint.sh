@@ -2,7 +2,7 @@
 
 setenv-by-psid() {
   # retrieve the value from parameter store
-  aws ssm get-parameter --name $2 --query Parameter.Value --output text
+  aws ssm get-parameter --name $2 --query Parameter.Value --output text > /dev/null
   if [ $? -ne 0 ]; then
     echo "Could not retrieve \"$2\" from ParameterStore"
     exit 10; return 10;
@@ -13,7 +13,7 @@ setenv-by-psid() {
 
 setenv-by-smid() {
   # retrieve the value from secrets manager
-  aws secretsmanager get-secret-value --secret-id $2 --query SecretString --output text
+  aws secretsmanager get-secret-value --secret-id $2 --query SecretString --output text > /dev/null
   if [ $? -ne 0 ]; then
     echo "Could not retrieve \"$2\" from SecretsManager"
     exit 10; return 10;
@@ -120,6 +120,7 @@ else
 fi
 
 function waitfor() {
+  echo checking connection to ${1}:${2};
   while ! nc -z $1 $2;
   do
     echo waiting for ${1}:${2};
