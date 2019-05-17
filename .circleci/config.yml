@@ -23,7 +23,7 @@ commands:
             cd << parameters.container >>
             docker image build -t << parameters.container >> .
       - cache_save:
-          container: ckan
+          container: << parameters.container >>
   dockertag:
     parameters:
       container:
@@ -62,6 +62,9 @@ commands:
     parameters:
       container:
         type: string
+      fail_forward:
+        type: boolean
+        default: true
     steps:
       - restore_cache:
           keys:
@@ -72,7 +75,7 @@ commands:
           name: Load Docker image layer cache
           command: |
             set +o pipefail
-            docker load -i /tmp/caches/<< parameters.container >>.tar | true
+            docker load -i /tmp/caches/<< parameters.container >>.tar || << parameters.fail_forward >>
   cache_save:
     parameters:
       container:
