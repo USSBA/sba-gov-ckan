@@ -30,6 +30,7 @@ ENV CKAN_HOME /usr/lib/ckan
 ENV CKAN_VENV $CKAN_HOME/venv
 ENV CKAN_CONFIG /etc/ckan
 ENV CKAN_STORAGE_PATH=/var/lib/ckan
+ENV CKAN_SRC=$CKAN_VENV/src/ckan
 
 # ckan user account
 RUN useradd -r -u 900 -m -c "ckan account" -d $CKAN_HOME -s /bin/false ckan
@@ -41,21 +42,24 @@ RUN mkdir -p $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH \
     && ln -s $CKAN_VENV/bin/paster /usr/local/bin/ckan-paster
 
 # pull the ckan source code
-RUN git clone --progress https://github.com/ckan/ckan.git $CKAN_VENV/src/ckan \
-    && cd $CKAN_VENV/src/ckan/ \
+RUN git clone --progress https://github.com/ckan/ckan.git $CKAN_SRC \
+    && cd $CKAN_SRC \
     && git checkout tags/ckan-2.8.2 \
     && rm -rf .git .github
 
 # install ckan
 RUN ckan-pip install -U pip \
-    && ckan-pip install --upgrade --no-cache-dir -r $CKAN_VENV/src/ckan/requirement-setuptools.txt \
-    && ckan-pip install --upgrade --no-cache-dir -r $CKAN_VENV/src/ckan/requirements.txt \
-    && ckan-pip install -e $CKAN_VENV/src/ckan/ \
-    && ln -s $CKAN_VENV/src/ckan/ckan/config/who.ini $CKAN_CONFIG/who.ini \
+    && ckan-pip install --upgrade --no-cache-dir -r $CKAN_SRC/requirement-setuptools.txt \
+    && ckan-pip install --upgrade --no-cache-dir -r $CKAN_SRC/requirements.txt \
+    && ckan-pip install -e $CKAN_SRC/ \
+    && ln -s $CKAN_SRC/ckan/config/who.ini $CKAN_CONFIG/who.ini \
     && chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
 
 # install pages plugin
 RUN ckan-pip install -e 'git+https://github.com/ckan/ckanext-pages.git#egg=ckanext-pages'
+
+# Install custom files
+COPY images/* $CKAN_SRC/ckan/public/base/images/
 
 # customize container entrypoint that will configure the application
 COPY ckan-entrypoint.sh /ckan-entrypoint.sh
