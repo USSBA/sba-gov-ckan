@@ -14,11 +14,16 @@ commands:
       container:
         type: string
     steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
       - deploy:
           name: Build << parameters.container >> container
           command: |
             cd << parameters.container >>
             docker image build -t << parameters.container >> .
+      - cache_save:
+          container: ckan
   dockertag:
     parameters:
       container:
@@ -35,100 +40,217 @@ commands:
       - deploy:
           name: Push << parameters.container >> container to ECR
           command: docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/<< parameters.container >>:latest
+  snykinstall:
+    steps:
+      - run:
+          name: Install snyk
+          command: sudo npm install -g snyk
   snykscan:
     parameters:
       container:
         type: string
     steps:
+      - checkout
+      - setup_remote_docker
+      - snykinstall
+      - cache_restore:
+          container: << parameters.container >>
       - deploy:
           name: Snyk scan << parameters.container >> container
           command: snyk test --docker << parameters.container >>:latest --file=<< parameters.container >>/Dockerfile --exclude-base-image-vulns
-
-jobs:
-  dockerBuild:
-    executor: default
+  cache_restore:
+    parameters:
+      container:
+        type: string
     steps:
-      - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
-      - dockerbuild:
-          container: ckan
-      - dockerbuild:
-          container: ckan-solr
-      - dockerbuild:
-          container: ckan-datapusher
-  snykScan:
-    executor: default
-    steps:
-      - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
+      - restore_cache:
+          keys:
+            - v1-<< parameters.container >>-{{ .Branch }}
+          paths:
+            - /tmp/caches/<< parameters.container >>.tar
       - run:
-          name: Install snyk
-          command: sudo npm install -g snyk
-      - snykscan:
-          container: ckan
-      - snykscan:
-          container: ckan-solr
-      - snykscan:
-          container: ckan-datapusher
-  uploadToECR:
-    executor: docker-awscli
+          name: Load Docker image layer cache
+          command: |
+            set +o pipefail
+            docker load -i /tmp/caches/<< parameters.container >>.tar | true
+  cache_save:
+    parameters:
+      container:
+        type: string
     steps:
-      - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
-      - dockertag:
-          container: ckan
-      - dockertag:
-          container: ckan-solr
-      - dockertag:
-          container: ckan-datapusher
+      - run:
+          name: Save Docker image layer cache
+          command: |
+            mkdir -p /tmp/caches
+            docker save -o /tmp/caches/<< parameters.container >>.tar << parameters.container >>
+      - save_cache:
+          key: v1-<< parameters.container >>-{{ .Branch }}-{{ epoch }}
+          paths:
+            - /tmp/caches/<< parameters.container >>.tar
+  ecr_login:
+    steps:
       - deploy:
           name: ECR login
           command: $(aws ecr get-login --no-include-email --region ${AWS_DEFAULT_REGION})
+  ecr_upload:
+    parameters:
+      container:
+        type: string
+    steps:
+      - checkout
+      - setup_remote_docker
+      - cache_restore:
+          container: << parameters.container >>
+      - dockertag:
+          container: << parameters.container >>
+      - ecr_login
       - dockerpush:
+          container: << parameters.container >>
+
+
+jobs:
+  dockerBuildCkan:
+    executor: default
+    steps:
+      - dockerbuild:
           container: ckan
-      - dockerpush:
+  dockerBuildCkanSolr:
+    executor: default
+    steps:
+      - dockerbuild:
           container: ckan-solr
-      - dockerpush:
+  dockerBuildCkanDatapusher:
+    executor: default
+    steps:
+      - dockerbuild:
+          container: ckan-datapusher
+  snykScanCkan:
+    executor: default
+    steps:
+      - snykscan:
+          container: ckan
+  snykScanCkanSolr:
+    executor: default
+    steps:
+      - snykscan:
+          container: ckan-solr
+  snykScanCkanDatapusher:
+    executor: default
+    steps:
+      - snykscan:
+          container: ckan-datapusher
+  uploadToEcrCkan:
+    executor: docker-awscli
+    steps:
+      - ecr_upload:
+          container: ckan
+  uploadToEcrCkanSolr:
+    executor: docker-awscli
+    steps:
+      - ecr_upload:
+          container: ckan-solr
+  uploadToEcrCkanDatapusher:
+    executor: docker-awscli
+    steps:
+      - ecr_upload:
           container: ckan-datapusher
 
 workflows:
   version: 2
   featureBranch:
     jobs:
-      - dockerBuild:
+      - dockerBuildCkan:
           filters:
             branches:
               ignore:
                 - master
-      - snykScan:
+      - snykScanCkan:
           context: snyk
           requires:
-            - dockerBuild
+            - dockerBuildCkan
+          filters:
+            branches:
+              ignore:
+                  - master
+      - dockerBuildCkanSolr:
+          filters:
+            branches:
+              ignore:
+                - master
+      - snykScanCkanSolr:
+          context: snyk
+          requires:
+            - dockerBuildCkanSolr
+          filters:
+            branches:
+              ignore:
+                  - master
+      - dockerBuildCkanDatapusher:
+          filters:
+            branches:
+              ignore:
+                - master
+      - snykScanCkanDatapusher:
+          context: snyk
+          requires:
+            - dockerBuildCkanDatapusher
           filters:
             branches:
               ignore:
                   - master
   masterBranch:
     jobs:
-      - dockerBuild:
+      - dockerBuildCkan:
           filters:
             branches:
               only: master
-      - snykScan:
+      - snykScanCkan:
           requires:
-            - dockerBuild
+            - dockerBuildCkan
           context: snyk
           filters:
             branches:
               only: master
-      - uploadToECR:
+      - uploadToEcrCkan:
           context: sba-gov-upper
           requires:
-            - dockerBuild
-            - snykScan
+            - snykScanCkan
+          filters:
+            branches:
+              only: master
+      - dockerBuildCkanSolr:
+          filters:
+            branches:
+              only: master
+      - snykScanCkanSolr:
+          requires:
+            - dockerBuildCkanSolr
+          context: snyk
+          filters:
+            branches:
+              only: master
+      - uploadToEcrCkanSolr:
+          context: sba-gov-upper
+          requires:
+            - snykScanCkanSolr
+          filters:
+            branches:
+              only: master
+      - dockerBuildCkanDatapusher:
+          filters:
+            branches:
+              only: master
+      - snykScanCkanDatapusher:
+          requires:
+            - dockerBuildCkanDatapusher
+          context: snyk
+          filters:
+            branches:
+              only: master
+      - uploadToEcrCkanDatapusher:
+          context: sba-gov-upper
+          requires:
+            - snykScanCkanDatapusher
           filters:
             branches:
               only: master
