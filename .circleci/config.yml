@@ -160,100 +160,47 @@ jobs:
 
 workflows:
   version: 2
-  featureBranch:
+  branch_workflow:
     jobs:
-      - dockerBuildCkan:
-          filters:
-            branches:
-              ignore:
-                - master
-      - snykScanCkan:
-          context: snyk
-          requires:
-            - dockerBuildCkan
-          filters:
-            branches:
-              ignore:
-                  - master
-      - dockerBuildCkanSolr:
-          filters:
-            branches:
-              ignore:
-                - master
-      - snykScanCkanSolr:
-          context: snyk
-          requires:
-            - dockerBuildCkanSolr
-          filters:
-            branches:
-              ignore:
-                  - master
-      - dockerBuildCkanDatapusher:
-          filters:
-            branches:
-              ignore:
-                - master
-      - snykScanCkanDatapusher:
-          context: snyk
-          requires:
-            - dockerBuildCkanDatapusher
-          filters:
-            branches:
-              ignore:
-                  - master
-  masterBranch:
-    jobs:
-      - dockerBuildCkan:
-          filters:
-            branches:
-              only: master
+      - dockerBuildCkan
       - snykScanCkan:
           requires:
             - dockerBuildCkan
           context: snyk
-          filters:
-            branches:
-              only: master
       - uploadToEcrCkan:
           context: sba-gov-upper
           requires:
-            - snykScanCkan
+            - dockerBuildCkan
+            - dockerBuildCkanSolr
+            - dockerBuildCkanDatapusher
           filters:
             branches:
               only: master
-      - dockerBuildCkanSolr:
-          filters:
-            branches:
-              only: master
+      - dockerBuildCkanSolr
       - snykScanCkanSolr:
           requires:
             - dockerBuildCkanSolr
           context: snyk
-          filters:
-            branches:
-              only: master
       - uploadToEcrCkanSolr:
           context: sba-gov-upper
           requires:
-            - snykScanCkanSolr
+            - dockerBuildCkan
+            - dockerBuildCkanSolr
+            - dockerBuildCkanDatapusher
           filters:
             branches:
               only: master
-      - dockerBuildCkanDatapusher:
-          filters:
-            branches:
-              only: master
+      - dockerBuildCkanDatapusher
       - snykScanCkanDatapusher:
           requires:
             - dockerBuildCkanDatapusher
           context: snyk
-          filters:
-            branches:
-              only: master
       - uploadToEcrCkanDatapusher:
           context: sba-gov-upper
           requires:
-            - snykScanCkanDatapusher
+            - dockerBuildCkan
+            - dockerBuildCkanSolr
+            - dockerBuildCkanDatapusher
           filters:
             branches:
               only: master
