@@ -1,10 +1,10 @@
 # Apache Solr
 
-For more information on Apache Solr, see [Apache Solr's documentation](TODO)
+For more information on Apache Solr, see [Apache Solr's documentation](https://lucene.apache.org/solr/guide/)
 
 ## Infrastructure Usage
 
-To support ckan, we have planned for only a single non-distributed, non-replicated instance of Solr running at a time.  The data directory is hosted on AWS EFS, and mounted to the container at runtime.  For the predicted usage of this system, it is unlikely we will exceed the demands of solr beyond this.  
+To support CKAN, we have planned for only a single non-distributed, non-replicated instance of Solr running at a time.  The data directory is hosted on AWS EFS, and mounted to the container at runtime.  For the predicted usage of this system, it is unlikely we will exceed the demands of solr beyond this.  
 
 ### Volumes
 

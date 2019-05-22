@@ -274,7 +274,7 @@ _**Required:** No, **Default:** 587_
 
 
 #### CKAN_SMTP_STARTTLS
-Weather or not TLS connections can be established to the SMTP endpoint.
+Whether or not TLS connections can be established to the SMTP endpoint.
 
 _**Required:** No, **Default:** True_
 
