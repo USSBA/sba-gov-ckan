@@ -70,7 +70,7 @@ An AWS Systems Manager Parameter Store key that will be fetched from AWS at runt
 
 _Required: Yes, Optional_
 
-[_return to index_](#Runtime Environment Variables)
+[_return to index_](#Environment)
 
 
 #### CKAN_PORT
