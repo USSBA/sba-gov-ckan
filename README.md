@@ -41,6 +41,25 @@ With docker-compose installed running these containers is easy. Simply run `dock
 
 _**Note:** The docker-compose.yaml file in this repository uses the `host` networking mode. As a result when running on Windows or Mac you may need to connect to the virtual machine in which Docker runs rather than your `localhost`._
 
+## Build and Deployment Pipeline
+
+This project is built with CircleCI and has the configuration [in this repository](./.circleci/config.yml).
+
+### Feature Branch
+
+When a new branch (not `master`) is pushed to GitHub, circleci will:
+
+1) Build the docker image
+1) Run a [snyk](https://www.snyk.io) scan on the built image
+
+### Master Branch
+
+1) Build the docker image
+1) Register the docker image tag with snyk ECR scanning (coming soon!)
+1) Push the docker image to AWS ECR (Elastic Container Registry) with these tags:
+  * `latest`
+  * `<git-hash>` (coming soon)
+
 ## Contributing
 
 TODO: describe the constraints and process in which the opensource community may contribute to this project.
