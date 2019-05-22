@@ -25,6 +25,10 @@ A simple session caching mechanism.
 #### 2. AWS RDS PostgreSQL
 A relational database to persist metadata for a vast number of entities.
 
+### Network Diagram
+
+![Network Diagram](docs/images/ckan-network.png)
+
 ## Development
 
 For a more in-depth look at container environment configurations please navigate to the respective sub-directory.
