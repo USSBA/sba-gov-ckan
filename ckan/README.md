@@ -6,7 +6,7 @@
 The default location where CKAN file uploads will be persisted. In a production environment this volume should point NAS device so that it can be shared across any number of CKAN containers.
 
 #### /root/.aws/
-This volume is not intended for production environments. If you are not running on the AWS cloud platform please refer to the [Environment](#Environment) section of this document.
+For testing with docker-compose, we default to mounting "~/.aws" from the local user.  This volume is not intended for production environments. If you are not running on the AWS cloud platform please refer to the [Environment](#Environment) section of this document.
 
 
 ### Environment
@@ -274,7 +274,7 @@ _**Required:** No, **Default:** 587_
 
 
 #### CKAN_SMTP_STARTTLS
-Weather or not TLS connections can be established to the SMTP endpoint. 
+Weather or not TLS connections can be established to the SMTP endpoint.
 
 _**Required:** No, **Default:** True_
 

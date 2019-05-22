@@ -36,16 +36,17 @@ services:
     - CKAN_SMTP_PASSWORD=fake
     - APP_UUID=AAAAAAAA-0000-1111-2222-BBBBBBBBBBBB
     - SESSION_SECRET=AAAAAAAAAAAAAAAAAAAAAAAAA
-    ## To pull from AWS ParameterStore/SecretsManager, use the following:
-    - AWS_PROFILE=sba-upper
+    ## AWS Configuration: To pull from AWS ParameterStore/SecretsManager, use the following:
+    #- AWS_PROFILE=<your-profile-name-here>
     #- POSTGRES_PASSWORD_PSID=/ckan/staging/db_password/postgres
     #- CKAN_SMTP_USER_SMID=staging_SES_USER
     #- SMTP_PWD_SMID=staging_SES_PASSWORD
     #- APP_UUID_PSID=/ckan/staging/app_uuid
     #- SESSION_SECRET_PSID=/ckan/staging/session_secret
     volumes:
-    - ~/.aws/:/root/.aws/
     - ckan:/var/lib/ckan/
+    ## AWS Configuration: uncomment this line and ensure you have your AWS credentials configured in your local ~/.aws directory
+    #- ~/.aws/:/root/.aws/
 
   datapusher:
     container_name: datapusher
