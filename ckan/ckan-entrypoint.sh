@@ -172,13 +172,11 @@ ckan-paster --plugin=ckan db init -c "$CONFIG"
 echo "Running: datastore set-permissions"
 ckan-paster --plugin=ckan datastore set-permissions -c ${CONFIG} | psql "$CKAN_DATASTORE_WRITE_URL" --set ON_ERROR_STOP=1
 
-# TODO: we may need to only run this line if the user does not exist...
-# running subsequent times no updates to the user will occur meaning the password/email will not
-# change once the user is created; that will need to be done via browser
-# perhasp we can use Cloud9 as a management console for CKAN
-
-echo "Running: sysadmin add"
-yes | ckan-paster --plugin=ckan sysadmin add ias email=sbaias@fearless.tech password=${POSTGRES_PASSWORD} --config "$CONFIG"
+# To create an admin user at startup for testing purposes, uncomment the following
+#echo "Running: sysadmin add"
+#ckan_admin_username=admin
+#ckan_admin_email=admin@example.com
+#yes | ckan-paster --plugin=ckan sysadmin add ${ckan_admin_username} email=${ckan_admin_email} password=${POSTGRES_PASSWORD} --config "$CONFIG"
 
 echo "Runing: exec"
 exec "$@"
