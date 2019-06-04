@@ -7,8 +7,18 @@ executors:
   docker-awscli:
     docker:
       - image: ussba/cc-docker-git-aws
+  docker-poirot:
+    docker:
+      - image: ussba/poirot:3
 
 commands:
+  poirotscan:
+    steps:
+      - checkout
+      - run:
+          name: Scanning for PII (Poirot)
+          command: |
+            poirot --patterns https://raw.githubusercontent.com/USSBA/sba-gov-ckan/master/poirot-patterns.txt --revlist="master^..HEAD" --verbose
   dockerbuild:
     parameters:
       container:
@@ -112,6 +122,10 @@ commands:
 
 
 jobs:
+  poirot:
+    executor: docker-poirot
+    steps:
+      - poirotscan
   dockerBuildCkan:
     executor: default
     steps:
@@ -162,6 +176,7 @@ workflows:
   version: 2
   branch_workflow:
     jobs:
+      - poirot
       - dockerBuildCkan
       - snykScanCkan:
           requires:
