@@ -15,10 +15,11 @@ commands:
   poirotscan:
     steps:
       - checkout
-      - run:
+      - deploy:
           name: Scanning for PII (Poirot)
           command: |
-            poirot --patterns https://raw.githubusercontent.com/USSBA/sba-gov-ckan/master/poirot-patterns.txt --revlist="master^..HEAD" --verbose
+            poirot --patterns https://raw.githubusercontent.com/USSBA/sba-gov-ckan/master/poirot-patterns.txt --revlist="master^..HEAD" --verbose > output.txt || ( cat output.txt && false )
+            cat output.txt
   dockerbuild:
     parameters:
       container:

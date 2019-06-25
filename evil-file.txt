@@ -1,0 +1,2 @@
+SSN: 123-45-6789
+aws_access_key_id: AAAAAAAAAAAAAH
