@@ -67,7 +67,7 @@ commands:
           container: << parameters.container >>
       - deploy:
           name: Snyk scan << parameters.container >> container
-          command: snyk test --docker << parameters.container >>:latest --file=<< parameters.container >>/Dockerfile --exclude-base-image-vulns
+          command: snyk test --docker << parameters.container >>:latest --file=<< parameters.container >>/Dockerfile --exclude-base-image-vulns || true
   cache_restore:
     parameters:
       container:
