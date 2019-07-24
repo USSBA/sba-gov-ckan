@@ -60,6 +60,9 @@ RUN ckan-pip install -e 'git+https://github.com/ckan/ckanext-pages.git#egg=ckane
 
 # Install custom files
 COPY images/* $CKAN_SRC/ckan/public/base/images/
+RUN mkdir $CKAN_SRC/tmp
+COPY overrides/* $CKAN_SRC/tmp/
+RUN cp $CKAN_SRC/tmp/promoted.html $CKAN_SRC/ckan/templates/home/snippets/promoted.html
 
 # customize container entrypoint that will configure the application
 COPY ckan-entrypoint.sh /ckan-entrypoint.sh

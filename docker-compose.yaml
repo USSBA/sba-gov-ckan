@@ -97,11 +97,21 @@ services:
   ckan-create-admin-user:
     # Create user on startup, then shutdown
     #
-    command: 'echo "y" | ckan-paster --plugin=ckan sysadmin add ckanadmin email=fake@z.z password=ckanadmin --config /etc/ckan/production.ini'
-    #command: 'waitfor localhost 80; ckan-paster --plugin=ckan sysadmin add ckanadmin email=fake@z.z password=ckanadmin --config /etc/ckan/production.ini'
-    #command: >
-    #  /bin/bash -c "sleep 30;
-    #  /ckan-entrypoint.sh ckan-paster --plugin=ckan sysadmin add ckanadmin email=fake@z.z password=ckanadmin --config /etc/ckan/production.ini"
+    command: |
+      bash -c "
+        function waitfor() {
+          echo checking connection to $${1}:$${2};
+          while ! nc -z $$1 $$2;
+          do
+            echo waiting for $${1}:$${2};
+            sleep 3;
+          done;
+          echo Connected to $${1}:$${2};
+        }
+        waitfor localhost 80;
+        ckan-paster --plugin=ckan user add ckanadmin email=fake@z.z password=ckanadmin -c /etc/ckan/production.ini;
+        ckan-paster --plugin=ckan sysadmin add ckanadmin --config /etc/ckan/production.ini
+      "
     restart: "no"
     depends_on:
     - "ckan"
