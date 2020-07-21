@@ -64,6 +64,12 @@ RUN mkdir $CKAN_SRC/tmp
 COPY overrides/* $CKAN_SRC/tmp/
 RUN cp $CKAN_SRC/tmp/promoted.html $CKAN_SRC/ckan/templates/home/snippets/promoted.html
 
+# Copy header override; this can probably be removed when upgrade to python3 happens
+# to use the official googleanalytics plugin instead
+RUN cp $CKAN_SRC/tmp/header.html $CKAN_SRC/ckan/templates/header.html
+# Add extra helper functions
+RUN cat $CKAN_SRC/tmp/extra-helper-functions.py >> $CKAN_SRC/ckan/lib/helpers.py
+
 # customize container entrypoint that will configure the application
 COPY ckan-entrypoint.sh /ckan-entrypoint.sh
 COPY production.ini $CKAN_CONFIG/production.ini.unconfigured
