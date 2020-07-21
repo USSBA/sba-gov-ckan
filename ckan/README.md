@@ -55,6 +55,8 @@ _**Note:** The AWS IAM policy and role may very between environments, much less 
   * [CKAN_SMTP_PASSWORD_SMID](#CKAN_SMTP_PASSWORD_SMID)
   * [CKAN_SMTP_MAIL_TO](#CKAN_SMTP_MAIL_TO)
   * [CKAN_SMTP_MAIL_FROM](#CKAN_SMTP_MAIL_FROM)
+* **GOOGLE_ANALYTICS**
+  * [CKAN_GOOGLE_ANALYTICS_ID](#CKAN_GOOGLE_ANALYTICS_ID)
 
 
 #### APP_UUID
@@ -327,3 +329,8 @@ An email address where CKAN generated mail will originate from.
 _**Required:** Yes_
 
 [_return to index_](#Environment)
+
+#### CKAN_GOOGLE_ANALYTICS_ID
+A google analytics ID to provide for all pages
+
+_**Required:** No_
