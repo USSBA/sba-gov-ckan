@@ -49,7 +49,7 @@ services:
     ## AWS Configuration: uncomment this line and ensure you have your AWS credentials configured in your local ~/.aws directory
     #- ~/.aws/:/root/.aws/
 
-  datapusher:
+  ckan-datapusher:
     container_name: datapusher
     image: ckan-datapusher
     build:
@@ -74,7 +74,7 @@ services:
     volumes:
     - postgres:/var/lib/postgresql/data/
 
-  solr:
+  ckan-solr:
     container_name: solr
     image: ckan-solr
     network_mode: host
