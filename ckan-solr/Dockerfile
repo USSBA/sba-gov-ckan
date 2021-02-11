@@ -1,7 +1,7 @@
 FROM alpine:3.9
 RUN apk --update add --no-cache curl bash openjdk8
-ENV SOLR_VERSION=6.6.2
-ENV CKAN_VERSION=2.8.2
+ENV SOLR_VERSION=6.6.6
+ENV CKAN_VERSION=2.9.2
 WORKDIR /opt/
 RUN cd /opt \
   && curl https://archive.apache.org/dist/lucene/solr/${SOLR_VERSION}/solr-${SOLR_VERSION}.tgz -o solr.tgz \
