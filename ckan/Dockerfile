@@ -1,13 +1,12 @@
-FROM debian:jessie
+FROM debian:buster
 
 # install dependencies
 RUN apt-get -q -y update \
     && DEBIAN_FRONTEND=noninteractive apt-get -q -y upgrade \
     && apt-get -q -y install \
-        python-dev \
-        python-pip \
-        python-virtualenv \
-        python-wheel \
+        python3-dev \
+        python3-pip \
+        python3-wheel \
         libpq-dev \
         libxml2-dev \
         libxslt-dev \
@@ -22,8 +21,13 @@ RUN apt-get -q -y update \
         gettext-base \
         netcat \
     && apt-get -q clean \
-    && pip install awscli \
     && rm -rf /var/lib/apt/lists/*
+
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1 && python --version
+RUN update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1 && pip --version
+RUN pip install awscli
+RUN pip install --upgrade virtualenv
+
 
 # ckan install environment
 ENV CKAN_HOME /usr/lib/ckan
@@ -44,7 +48,7 @@ RUN mkdir -p $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH \
 # pull the ckan source code
 RUN git clone --progress https://github.com/ckan/ckan.git $CKAN_SRC \
     && cd $CKAN_SRC \
-    && git checkout tags/ckan-2.8.2 \
+    && git checkout tags/ckan-2.9.2 \
     && rm -rf .git .github
 
 # install ckan
