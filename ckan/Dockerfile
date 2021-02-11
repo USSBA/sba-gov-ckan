@@ -43,7 +43,7 @@ RUN useradd -r -u 900 -m -c "ckan account" -d $CKAN_HOME -s /bin/false ckan
 RUN mkdir -p $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH \
     && virtualenv $CKAN_VENV \
     && ln -s $CKAN_VENV/bin/pip /usr/local/bin/ckan-pip \
-    && ln -s $CKAN_VENV/bin/paster /usr/local/bin/ckan-paster
+    && ln -s $CKAN_VENV/bin/ckan /usr/local/bin/ckan
 
 # pull the ckan source code
 RUN git clone --progress https://github.com/ckan/ckan.git $CKAN_SRC \
@@ -80,4 +80,4 @@ COPY production.ini $CKAN_CONFIG/production.ini.unconfigured
 RUN chmod +x /ckan-entrypoint.sh
 
 ENTRYPOINT ["/ckan-entrypoint.sh"]
-CMD ["ckan-paster","serve","/etc/ckan/production.ini"]
+CMD ["ckan","-c","/etc/ckan/production.ini", "run", "--host", "0.0.0.0"]

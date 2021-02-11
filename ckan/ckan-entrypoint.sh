@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 
 setenv-by-psid() {
   # retrieve the value from parameter store
@@ -166,17 +166,19 @@ CONFIG="${CKAN_CONFIG}/production.ini"
 UNCONFIGURED_CONFIG="${CONFIG}.unconfigured"
 envsubst < $UNCONFIGURED_CONFIG > $CONFIG
 
+export CKAN_INI=$CONFIG
+
 echo "Running: db init"
-ckan-paster --plugin=ckan db init -c "$CONFIG"
+ckan db init
 
 echo "Running: datastore set-permissions"
-ckan-paster --plugin=ckan datastore set-permissions -c ${CONFIG} | psql "$CKAN_DATASTORE_WRITE_URL" --set ON_ERROR_STOP=1
+ckan datastore set-permissions | psql "$CKAN_DATASTORE_WRITE_URL" --set ON_ERROR_STOP=1
 
 # To create an admin user at startup for testing purposes, uncomment the following
 #echo "Running: sysadmin add"
 #ckan_admin_username=admin
 #ckan_admin_email=admin@example.com
-#yes | ckan-paster --plugin=ckan sysadmin add ${ckan_admin_username} email=${ckan_admin_email} password=${POSTGRES_PASSWORD} --config "$CONFIG"
+#yes | ckan sysadmin add ${ckan_admin_username} email=${ckan_admin_email} password=${POSTGRES_PASSWORD}
 
 echo "Runing: exec"
 exec "$@"

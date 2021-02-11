@@ -109,9 +109,11 @@ services:
           done;
           echo Connected to $${1}:$${2};
         }
+        sleep 20;
         waitfor localhost 80;
-        ckan-paster --plugin=ckan user add ckanadmin email=fake@z.z password=ckanadmin -c /etc/ckan/production.ini;
-        ckan-paster --plugin=ckan sysadmin add ckanadmin --config /etc/ckan/production.ini
+        export CKAN_INI=/etc/ckan/production.ini
+        ckan user add ckanadmin email=fake@z.z password=ckanadmin;
+        ckan sysadmin add ckanadmin
       "
     restart: "no"
     depends_on:
