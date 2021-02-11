@@ -16,6 +16,7 @@ RUN apt-get update \
         zlib1g-dev \
         git \
         gettext-base \
+        locales-all \
     && apt-get -y autoremove \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -36,6 +37,8 @@ RUN git clone -b '0.0.17' https://github.com/ckan/datapusher.git
 
 # install datapusher and it's dependencies
 WORKDIR $DATAPUSHER_HOME/src/datapusher
+# bump requests package to latest version to work around an issue
+RUN sed -i -E 's/(requests\[security\])==.*/\1==2.25.1/' requirements.txt
 RUN pip install -r requirements.txt && pip install -e .
 
 # entrypoint configuration
