@@ -1,13 +1,15 @@
-FROM ubuntu:16.04
+FROM ubuntu:20.04
 
 ENV DATAPUSHER_HOME /usr/lib/ckan/datapusher
 
 # install dependencies
+ENV TZ=Etc/UTC
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN apt-get update \
     && apt-get -y install \
-        python-dev \
-        python-pip \
-        python-virtualenv \
+        python3-dev \
+        python3-pip \
+        python3-virtualenv \
         build-essential \
         libxslt1-dev \
         libxml2-dev \
@@ -18,7 +20,10 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install -U pip
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1 && python --version
+RUN update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1 && pip --version
+
+#RUN pip install -U pip
 
 # create home directory of datapusher
 RUN mkdir -p $DATAPUSHER_HOME/src
