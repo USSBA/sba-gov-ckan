@@ -79,6 +79,7 @@ COPY ckan-entrypoint.sh /ckan-entrypoint.sh
 COPY production.ini $CKAN_CONFIG/production.ini.unconfigured
 RUN chmod +x /ckan-entrypoint.sh
 ENV CKAN_INI=/etc/ckan/production.ini
+ENV CKAN_PORT=5000
 
 ENTRYPOINT ["/ckan-entrypoint.sh"]
-CMD ["ckan","-c","/etc/ckan/production.ini", "run", "--host", "0.0.0.0"]
+CMD ["bash", "-c", "ckan -c /etc/ckan/production.ini run --host 0.0.0.0 --port $CKAN_PORT"]

@@ -115,25 +115,16 @@ else
 fi
 
 echo "Running: envsubst"
-CONFIG="${CKAN_CONFIG}/production.ini"
-UNCONFIGURED_CONFIG="${CONFIG}.unconfigured"
-envsubst < $UNCONFIGURED_CONFIG > $CONFIG
-
-#export CKAN_INI=$CONFIG
+CKAN_INI_UNCONFIGURED="${CKAN_INI}.unconfigured"
+envsubst < $CKAN_INI_UNCONFIGURED > $CKAN_INI
 
 echo "Running: db init"
-ckan db init > /dev/null 2>&1
+ckan db init > /dev/null
 echo "The 'db init' has completed"
 
 echo "Running: datastore set-permissions"
-ckan datastore set-permissions | psql "$CKAN_DATASTORE_WRITE_URL" --set ON_ERROR_STOP=1 > /dev/null 2>&1
+ckan datastore set-permissions | psql "$CKAN_DATASTORE_WRITE_URL" --set ON_ERROR_STOP=1 > /dev/null
 echo "The 'datastore set-permissions' has completed"
 
-# To create an admin user at startup for testing purposes, uncomment the following
-#echo "Running: sysadmin add"
-#ckan_admin_username=admin
-#ckan_admin_email=admin@example.com
-#yes | ckan sysadmin add ${ckan_admin_username} email=${ckan_admin_email} password=${POSTGRES_PASSWORD}
-
 echo "Runing: exec"
-exec "$@" --port ${CKAN_PORT}
+exec "$@"
