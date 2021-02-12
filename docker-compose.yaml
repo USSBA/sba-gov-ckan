@@ -91,7 +91,6 @@ services:
 
   ckan-create-admin-user:
     # Create user on startup, then shutdown
-    #
     command: |
       bash -c "
         function waitfor() {
@@ -105,8 +104,8 @@ services:
         }
         sleep 20;
         waitfor localhost 80;
-        export CKAN_INI=/etc/ckan/production.ini
-        ckan user add ckanadmin email=fake@z.z password=ckanadmin;
+        #export CKAN_INI=/etc/ckan/production.ini
+        ckan user add ckanadmin email=ckanadmin@localhost.ckan password=ckanadmin;
         ckan sysadmin add ckanadmin
       "
     restart: "no"
@@ -126,9 +125,8 @@ services:
     - CKAN_SITE_URL=http://localhost
     - CKAN_SMTP_MAIL_TO=fake@e.mail
     - CKAN_SMTP_MAIL_FROM=fake@e.mail
-    # (Optional) Defaults to 'email-smtp.us-east-1.amazonaws.com'
-    - SMTP_FQDN=localhost
-    - SMTP_PORT=1025
+    - SMTP_FQDN=localhost     # (Optional) Defaults to 'email-smtp.us-east-1.amazonaws.com'
+    - SMTP_PORT=1025          # (Optional) Defaults to '587'
     # Secrets
     - POSTGRES_PASSWORD=fearless
     - CKAN_SMTP_USER=fake
