@@ -15,10 +15,9 @@ services:
     build:
       context: ./ckan/
     network_mode: host
-    ports:
-    - 80:5000
+    #ports:
+    #- 80:5000
     expose:
-    - 80
     - 5000
     environment:
     # Environment Specific
@@ -27,12 +26,14 @@ services:
     - SOLR_FQDN=localhost
     - DATAPUSHER_FQDN=localhost
     - CKAN_SITE_URL=http://localhost
-    - CKAN_SMTP_MAIL_TO=fake@e.mail
-    - CKAN_SMTP_MAIL_FROM=fake@e.mail
+    #- CKAN_SMTP_ERROR_MAIL_TO=admin@localhost.developers
+    #- CKAN_SMTP_ERROR_MAIL_FROM=errors@localhost.ckan
+    - CKAN_SMTP_MAIL_FROM=ckan_server@localhost.ckan
     - CKAN_API_TOKEN_ENCODE_SECRET=9OzsqKgYG4o_-6RGZ14ebdsh6
     - CKAN_API_TOKEN_DECODE_SECRET=9OzsqKgYG4o_-6RGZ14ebdsh6
     # (Optional) Defaults to 'email-smtp.us-east-1.amazonaws.com'
-    - SMTP_FQDN=smtp.fake.mail
+    - SMTP_FQDN=localhost
+    - SMTP_PORT=1025
     # Secrets
     - POSTGRES_PASSWORD=fearless
     - CKAN_SMTP_USER=fake
@@ -136,7 +137,8 @@ services:
     - CKAN_SMTP_MAIL_TO=fake@e.mail
     - CKAN_SMTP_MAIL_FROM=fake@e.mail
     # (Optional) Defaults to 'email-smtp.us-east-1.amazonaws.com'
-    - SMTP_FQDN=smtp.fake.mail
+    - SMTP_FQDN=localhost
+    - SMTP_PORT=1025
     # Secrets
     - POSTGRES_PASSWORD=fearless
     - CKAN_SMTP_USER=fake
@@ -156,3 +158,11 @@ services:
     - ckan:/var/lib/ckan/
     ## AWS Configuration: uncomment this line and ensure you have your AWS credentials configured in your local ~/.aws directory
     #- ~/.aws/:/root/.aws/
+  fake_smtp:
+    image: reachfive/fake-smtp-server
+    network_mode: host
+    expose:
+    - 1025
+    - 1080
+    command: ["node", "index.js", "--auth", "fake:fake"]
+

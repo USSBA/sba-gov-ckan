@@ -105,8 +105,8 @@ if [ -z "$CKAN_SMTP_PASSWORD" ] && [ -z "$CKAN_SMTP_PASSWORD_SMID" ]; then
 else
   ([ ! -z "$CKAN_SMTP_PASSWORD" ] && export CKAN_SMTP_PASSWORD=$CKAN_SMTP_PASSWORD) || setenv-by-smid CKAN_SMTP_PASSWORD $CKAN_SMTP_PASSWORD_SMID || ERROR=1
 fi
-([ ! -z "$CKAN_SMTP_MAIL_TO" ] && export CKAN_SMTP_MAIL_TO=$CKAN_SMTP_MAIL_TO) || (echo "FATAL: CKAN_SMTP_MAIL_TO is not configured" && ERROR=1)
-([ ! -z "$CKAN_SMTP_MAIL_FROM" ] && export CKAN_SMTP_MAIL_FROM=$CKAN_SMTP_MAIL_FROM) || (echo "FATAL: CKAN_SMTP_MAIL_FROM is not configured" && ERROR=1)
+#([ ! -z "$CKAN_SMTP_MAIL_TO" ] && export CKAN_SMTP_MAIL_TO=$CKAN_SMTP_MAIL_TO) || (echo "FATAL: CKAN_SMTP_MAIL_TO is not configured" && ERROR=1)
+#([ ! -z "$CKAN_SMTP_MAIL_FROM" ] && export CKAN_SMTP_MAIL_FROM=$CKAN_SMTP_MAIL_FROM) || (echo "FATAL: CKAN_SMTP_MAIL_FROM is not configured" && ERROR=1)
 
 # ERROR
 # if any configuration errors have occured, we will need to exit
