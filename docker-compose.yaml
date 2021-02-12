@@ -15,10 +15,8 @@ services:
     build:
       context: ./ckan/
     network_mode: host
-    #ports:
-    #- 80:5000
     expose:
-    - 5000
+    - 80
     environment:
     # Environment Specific
     - POSTGRES_FQDN=localhost
@@ -31,9 +29,8 @@ services:
     - CKAN_SMTP_MAIL_FROM=ckan_server@localhost.ckan
     - CKAN_API_TOKEN_ENCODE_SECRET=9OzsqKgYG4o_-6RGZ14ebdsh6
     - CKAN_API_TOKEN_DECODE_SECRET=9OzsqKgYG4o_-6RGZ14ebdsh6
-    # (Optional) Defaults to 'email-smtp.us-east-1.amazonaws.com'
-    - SMTP_FQDN=localhost
-    - SMTP_PORT=1025
+    - SMTP_FQDN=localhost   # (Optional) Defaults to 'email-smtp.us-east-1.amazonaws.com'
+    - SMTP_PORT=1025        # (Optional) Defaults to '587'
     # Secrets
     - POSTGRES_PASSWORD=fearless
     - CKAN_SMTP_USER=fake
@@ -59,8 +56,6 @@ services:
     build:
       context: ./ckan-datapusher/
     network_mode: host
-    ports:
-    - 8800:8800
     expose:
     - 8800
   db:
@@ -71,8 +66,6 @@ services:
     - POSTGRES_PASSWORD=fearless
     - POSTGRES_USER=ckan_default
     - POSTGRES_DB=ckan_default
-    ports:
-    - 5432:5432
     expose:
     - 5432
     volumes:
@@ -84,8 +77,6 @@ services:
     network_mode: host
     build:
       context: ./ckan-solr/
-    ports:
-    - 8983:8983
     expose:
     - 8983
     volumes:
@@ -95,8 +86,6 @@ services:
     container_name: redis
     image: redis:latest
     network_mode: host
-    ports:
-    - 6379:6379
     expose:
     - 6379
 
@@ -115,7 +104,7 @@ services:
           echo Connected to $${1}:$${2};
         }
         sleep 20;
-        waitfor localhost 5000;
+        waitfor localhost 80;
         export CKAN_INI=/etc/ckan/production.ini
         ckan user add ckanadmin email=fake@z.z password=ckanadmin;
         ckan sysadmin add ckanadmin
@@ -123,6 +112,7 @@ services:
     restart: "no"
     depends_on:
     - "ckan"
+    - "db"
     image: ckan
     build:
       context: ./ckan/
@@ -158,6 +148,7 @@ services:
     - ckan:/var/lib/ckan/
     ## AWS Configuration: uncomment this line and ensure you have your AWS credentials configured in your local ~/.aws directory
     #- ~/.aws/:/root/.aws/
+
   fake_smtp:
     image: reachfive/fake-smtp-server
     network_mode: host

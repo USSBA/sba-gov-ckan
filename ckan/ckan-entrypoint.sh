@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 setenv-by-psid() {
   # retrieve the value from parameter store
@@ -105,8 +105,8 @@ if [ -z "$CKAN_SMTP_PASSWORD" ] && [ -z "$CKAN_SMTP_PASSWORD_SMID" ]; then
 else
   ([ ! -z "$CKAN_SMTP_PASSWORD" ] && export CKAN_SMTP_PASSWORD=$CKAN_SMTP_PASSWORD) || setenv-by-smid CKAN_SMTP_PASSWORD $CKAN_SMTP_PASSWORD_SMID || ERROR=1
 fi
-#([ ! -z "$CKAN_SMTP_MAIL_TO" ] && export CKAN_SMTP_MAIL_TO=$CKAN_SMTP_MAIL_TO) || (echo "FATAL: CKAN_SMTP_MAIL_TO is not configured" && ERROR=1)
-#([ ! -z "$CKAN_SMTP_MAIL_FROM" ] && export CKAN_SMTP_MAIL_FROM=$CKAN_SMTP_MAIL_FROM) || (echo "FATAL: CKAN_SMTP_MAIL_FROM is not configured" && ERROR=1)
+([ ! -z "$CKAN_SMTP_ERROR_MAIL_TO" ] && export CKAN_SMTP_ERROR_MAIL_TO=$CKAN_SMTP_MAIL_TO) || (echo "WARNING: CKAN_SMTP_ERROR_MAIL_TO is not configured, error emails will not be sent.")
+([ ! -z "$CKAN_SMTP_ERROR_MAIL_FROM" ] && export CKAN_SMTP_ERROR_MAIL_FROM=$CKAN_SMTP_MAIL_FROM) || (echo "WARNING: CKAN_SMTP_ERROR_MAIL_FROM is not configured, error emails will not be sent.")
 
 # ERROR
 # if any configuration errors have occured, we will need to exit
@@ -146,7 +146,8 @@ waitfor $DATAPUSHER_FQDN $DATAPUSHER_PORT
 read rolname <<< `psql -X "$CKAN_SQLALCHEMY_URL" --single-transaction --set ON_ERROR_STOP=1 --no-align -t --field-separator ' ' --quiet -c "SELECT rolname FROM pg_catalog.pg_roles WHERE rolname = '$DATASTORE_ROLENAME'"`
 if [ "${rolname}" != "${DATASTORE_ROLENAME}" ]; then
   echo "Creating the '$DATASTORE_ROLENAME' role"
-  psql "$CKAN_SQLALCHEMY_URL" -c "CREATE ROLE ${DATASTORE_ROLENAME} NOSUPERUSER NOCREATEDB NOCREATEROLE LOGIN PASSWORD '${POSTGRES_PASSWORD}'"
+  psql "$CKAN_SQLALCHEMY_URL" -c "CREATE ROLE ${DATASTORE_ROLENAME} NOSUPERUSER NOCREATEDB NOCREATEROLE LOGIN PASSWORD '${POSTGRES_PASSWORD}'" > /dev/null 2>&1
+  echo "The '$DATASTORE_ROLENAME' role was created."
 else
   echo "The '$DATASTORE_ROLENAME' role already exists"
 fi
@@ -155,8 +156,9 @@ fi
 read datname <<< `psql -X "$CKAN_SQLALCHEMY_URL" --single-transaction --set ON_ERROR_STOP=1 --no-align -t --field-separator ' ' --quiet -c "SELECT datname FROM pg_catalog.pg_database WHERE datname = '$DATASTORE_DB'"`
 if [ "${datname}" != "${DATASTORE_DB}" ]; then
   echo "Creating the '$DATASTORE_DB' database catalog"
-  psql "$CKAN_SQLALCHEMY_URL" -c "CREATE DATABASE ${DATASTORE_DB} OWNER ${POSTGRES_USER} ENCODING 'utf-8'"
-  psql "$CKAN_SQLALCHEMY_URL" -c "GRANT ALL PRIVILEGES ON DATABASE ${DATASTORE_DB} TO ${POSTGRES_USER}"
+  psql "$CKAN_SQLALCHEMY_URL" -c "CREATE DATABASE ${DATASTORE_DB} OWNER ${POSTGRES_USER} ENCODING 'utf-8'" > /dev/null 2>&1
+  psql "$CKAN_SQLALCHEMY_URL" -c "GRANT ALL PRIVILEGES ON DATABASE ${DATASTORE_DB} TO ${POSTGRES_USER}" > /dev/null 2>&1
+  echo "The '$DATASTORE_DB' database catalog has been created."
 else
   echo "The '$DATASTORE_DB' database already exists"
 fi
@@ -169,10 +171,12 @@ envsubst < $UNCONFIGURED_CONFIG > $CONFIG
 export CKAN_INI=$CONFIG
 
 echo "Running: db init"
-ckan db init
+ckan db init > /dev/null 2>&1
+echo "The 'db init' has completed"
 
 echo "Running: datastore set-permissions"
-ckan datastore set-permissions | psql "$CKAN_DATASTORE_WRITE_URL" --set ON_ERROR_STOP=1
+ckan datastore set-permissions | psql "$CKAN_DATASTORE_WRITE_URL" --set ON_ERROR_STOP=1 > /dev/null 2>&1
+echo "The 'datastore set-permissions' has completed"
 
 # To create an admin user at startup for testing purposes, uncomment the following
 #echo "Running: sysadmin add"
@@ -181,4 +185,4 @@ ckan datastore set-permissions | psql "$CKAN_DATASTORE_WRITE_URL" --set ON_ERROR
 #yes | ckan sysadmin add ${ckan_admin_username} email=${ckan_admin_email} password=${POSTGRES_PASSWORD}
 
 echo "Runing: exec"
-exec "$@"
+exec "$@" --port ${CKAN_PORT}
