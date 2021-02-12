@@ -16,9 +16,10 @@ services:
       context: ./ckan/
     network_mode: host
     ports:
-    - 80:80
+    - 80:5000
     expose:
     - 80
+    - 5000
     environment:
     # Environment Specific
     - POSTGRES_FQDN=localhost
@@ -28,6 +29,8 @@ services:
     - CKAN_SITE_URL=http://localhost
     - CKAN_SMTP_MAIL_TO=fake@e.mail
     - CKAN_SMTP_MAIL_FROM=fake@e.mail
+    - CKAN_API_TOKEN_ENCODE_SECRET=9OzsqKgYG4o_-6RGZ14ebdsh6
+    - CKAN_API_TOKEN_DECODE_SECRET=9OzsqKgYG4o_-6RGZ14ebdsh6
     # (Optional) Defaults to 'email-smtp.us-east-1.amazonaws.com'
     - SMTP_FQDN=smtp.fake.mail
     # Secrets
@@ -95,6 +98,7 @@ services:
     - 6379:6379
     expose:
     - 6379
+
   ckan-create-admin-user:
     # Create user on startup, then shutdown
     #
@@ -110,7 +114,7 @@ services:
           echo Connected to $${1}:$${2};
         }
         sleep 20;
-        waitfor localhost 80;
+        waitfor localhost 5000;
         export CKAN_INI=/etc/ckan/production.ini
         ckan user add ckanadmin email=fake@z.z password=ckanadmin;
         ckan sysadmin add ckanadmin
@@ -139,6 +143,8 @@ services:
     - CKAN_SMTP_PASSWORD=fake
     - APP_UUID=AAAAAAAA-0000-1111-2222-BBBBBBBBBBBB
     - SESSION_SECRET=AAAAAAAAAAAAAAAAAAAAAAAAA
+    - CKAN_API_TOKEN_ENCODE_SECRET=9OzsqKgYG4o_-6RGZ14ebdsh6
+    - CKAN_API_TOKEN_DECODE_SECRET=9OzsqKgYG4o_-6RGZ14ebdsh6
     ## AWS Configuration: To pull from AWS ParameterStore/SecretsManager, use the following:
     #- AWS_PROFILE=<your-profile-name-here>
     #- POSTGRES_PASSWORD_PSID=/ckan/staging/db_password/postgres
