@@ -20,21 +20,21 @@ RUN apt-get -q -y update \
         wget \
         gettext-base \
         netcat \
+    && apt-get -y autoremove \
     && apt-get -q clean \
     && rm -rf /var/lib/apt/lists/*
 
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1 && python --version
 RUN update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1 && pip --version
-RUN pip install awscli
+RUN pip install --upgrade awscli
 RUN pip install --upgrade virtualenv
-
 
 # ckan install environment
 ENV CKAN_HOME /usr/lib/ckan
 ENV CKAN_VENV $CKAN_HOME/venv
 ENV CKAN_CONFIG /etc/ckan
 ENV CKAN_STORAGE_PATH=/var/lib/ckan
-ENV CKAN_SRC=$CKAN_VENV/src/ckan
+ENV CKAN_SRC=$CKAN_VENV/src
 
 # ckan user account
 RUN useradd -r -u 900 -m -c "ckan account" -d $CKAN_HOME -s /bin/false ckan
@@ -60,6 +60,7 @@ RUN ckan-pip install -U pip \
     && chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
 
 ## install pages plugin
+#RUN ckan-pip install --upgrade --no-cache-dir pylons
 #RUN ckan-pip install -e 'git+https://github.com/ckan/ckanext-pages.git#egg=ckanext-pages'
 
 # Install custom files
@@ -82,4 +83,4 @@ ENV CKAN_INI=/etc/ckan/production.ini
 ENV CKAN_PORT=5000
 
 ENTRYPOINT ["/ckan-entrypoint.sh"]
-CMD ["bash", "-c", "ckan -c /etc/ckan/production.ini run --host 0.0.0.0 --port $CKAN_PORT"]
+CMD ["bash", "-c", "ckan run --host 0.0.0.0 --port $CKAN_PORT"]

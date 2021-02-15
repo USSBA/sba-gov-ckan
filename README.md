@@ -1,49 +1,63 @@
-# SBA-GOV-CKAN
+# sba-gov-ckan
 
 https://data.sba.gov is the home of open data at the Small Business Administration.  The platform of choice for hosting this data is called CKAN.  Within this repository, you will find a set of Docker image configurations that make up the services required to run CKAN in a containerized cloud environment.
 
 ## Infrastructure Components
 
-The CKAN stack is comprised of the following services.
+Custom Docker Images
 
-### Docker Services
-
-#### 1. CKAN
-[CKAN](./ckan/README.md) is the front-end website with which users will interact.
-
-#### 2. Solr
-[Solr](./ckan-solr/README.md) is the engine which allows users to index and search information contained within datasets.
-
-#### 3. DataPusher
-[DataPusher](./ckan-datapusher/README.md) is a background worker service that will process data sets and prepare them for searching and discovery.
-
-### Managed Services
-
-#### 1. AWS ElastiCache Redis
-A simple session caching mechanism.
-
-#### 2. AWS RDS PostgreSQL
-A relational database to persist metadata for a vast number of entities.
-
-### Network Diagram
+* [CKAN](./ckan/README.md)
+* [Apache Solr](./ckan-solr/README.md)
+* [DataPusher](./ckan-datapusher/README.md)
 
 ![Network Diagram](docs/images/ckan-network.png)
 
-## Development
-
-For a more in-depth look at container environment configurations please navigate to the respective sub-directory.
+## Local Development
 
 Requirements are:
-1. docker
-2. docker-compose
+1. docker installed
+2. docker-compose installed
 
-### Running locally with `docker-compose`
+This solution will also require an entry into your `hosts` file of the following `127.0.0.1 sba.ckan.com` and this file can be found respectivly based on your OS at:
 
-While CKANs cloud infrastructure uses managed Postgres and Redis, for testing purposes, we have added these services to docker-compose
+* Windows: `c:\windows\system32\drivers\etc\hosts`
+* Linux: `/etc/hosts`
 
-With docker-compose installed running these containers is easy. Simply run `docker-compose up --build` in your terminal from the root of this repository.
+```
+# In a Linux setting this is easy!
+$ sudo echo "127.0.0.1 sba.ckan.com" >> /etc/hosts
+```
 
-_**Note:** The docker-compose.yaml file in this repository uses the `host` networking mode. As a result when running on Windows or Mac you may need to connect to the virtual machine in which Docker runs rather than your `localhost`._
+**Note:**
+
+To explain why this is necessary please understand that in a production setting the `CKAN_SITE_URL` variable must be able to resolve.  When a dataset is uploaded, CKAN tracks that file in **Solr** as a fully qualified URI which triggers a **DataPusher** job to process that file.  If the URI cannot resolve then the **DataPusher** job will fail and the `preview` option of that dataset in the browser will be unavailable.
+
+This docker-compose solution uses a custom `bridge` network where each service is assigned a static IPv4 address.  This way we can use the `extra_hosts` option of the **DataPusher** service to map `sba.ckan.com` to the static IPv4 address assigned to **CKAN** allowing it to resolve both on your local machine and by the **DataPusher** virtual machine.
+
+
+### Using docker-compose to run the solution locally
+
+* Open a command line shell
+* Run `docker-compose build` to build all images in the solution
+* Run `docker-compose up` once the images have been built
+* Wait for services to come online, and the databases to be initialized
+* Interface with the following service via a web browser:
+  * CKAN @ [http://sba.ckan.com](http://sba.ckan.com)
+  * FakeEmail @ [http://sba.ckan.com:1080](http://sba.ckan.com:1080)
+  * Solr @ [http://sba.ckan.com:8983](http://sba.ckan.com:8983)
+* Open another command line shell
+* Run `docker-compose -f docker-compose.sysadmin.yaml run --rm sysadmin` to create the ckanadmin user
+* Login to CKAN using `ckanadmin` as both the username and password
+* Login to FakeEmail using `fake` as both the username and passowrd
+* Enjoy!
+
+### Using docker-compose to stop and cleanup locally
+
+* Open a command line shell
+* Run:
+  * `docker-compose down` to remove all contaienrs and networks
+  * `docker-compose down -v` to remove all containers, volumes, and networks
+  * `docker-compose down -v --rmi all` to remove all containers, volumes, and networks and images
 
 ## Build and Deployment Pipeline
 

@@ -1,0 +1,61 @@
+version: '3'
+
+volumes:
+  ckan:
+
+networks:
+  vpc:
+    driver: bridge
+    ipam:
+      config:
+      - subnet: 10.10.0.0/16
+        gateway: 10.10.0.1
+
+services:
+  sysadmin:
+    restart: "no"
+    image: ckan
+    build:
+      context: ./ckan/
+    command: |
+      bash -c "
+        function waitfor() {
+          echo checking connection to $${1}:$${2};
+          while ! nc -z $$1 $$2;
+          do
+            echo waiting for $${1}:$${2};
+            sleep 3;
+          done;
+          echo Connected to $${1}:$${2};
+        }
+        waitfor ckan 80;
+        ckan user add ckanadmin email=ckanadmin@sba.ckan.com password=ckanadmin \
+        && ckan sysadmin add ckanadmin
+      "
+    networks:
+      vpc:
+        ipv4_address: 10.10.0.25
+    environment:
+    # Environment Specific
+    - CKAN_PORT=80
+    - POSTGRES_FQDN=postgres
+    - REDIS_FQDN=redis
+    - SOLR_FQDN=solr
+    - DATAPUSHER_FQDN=datapusher
+    - CKAN_SITE_URL=http://sba.ckan.com
+    - CKAN_SMTP_MAIL_FROM=admin@sba.ckan.com
+    - SMTP_FQDN=smtp
+    - SMTP_PORT=1025
+    - BYPASS_INIT=1
+    # Secrets
+    - APP_UUID=AAAAAAAA-0000-1111-2222-BBBBBBBBBBBB
+    - CKAN_API_TOKEN_SECRET=9OzsqKgYG4o_-6RGZ14ebdsh6
+    - CKAN_SMTP_USER=fake
+    - CKAN_SMTP_PASSWORD=fake
+    - POSTGRES_PASSWORD=fearless
+    - SESSION_SECRET=AAAAAAAAAAAAAAAAAAAAAAAAA
+    volumes:
+    - ckan:/var/lib/ckan/
+    ## AWS Configuration: uncomment this line and ensure you have your AWS credentials configured in your local ~/.aws directory
+    #- ~/.aws/:/root/.aws/
+

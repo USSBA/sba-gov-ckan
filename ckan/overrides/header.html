@@ -1,12 +1,13 @@
+{% if h.google_analytics_enabled() %}
 <!-- Global site tag (gtag.js) - Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id={{ h.google_analytics_id() }}"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-
   gtag('config', '{{ h.google_analytics_id() }}');
 </script>
+{% endif %}
 {% block header_wrapper %} {% block header_account %}
 <header class="account-masthead">
   <div class="container">
