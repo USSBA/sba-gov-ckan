@@ -1,27 +1,5 @@
 #!/bin/bash -e
 
-setenv-by-psid() {
-  # retrieve the value from parameter store
-  aws ssm get-parameter --name $2 --query Parameter.Value --output text > /dev/null
-  if [ $? -ne 0 ]; then
-    echo "Could not retrieve \"$2\" from ParameterStore"
-    exit 10; return 10;
-  else
-    export $1=`aws ssm get-parameter --name $2 --query Parameter.Value --output text`
-  fi
-}
-
-setenv-by-smid() {
-  # retrieve the value from secrets manager
-  aws secretsmanager get-secret-value --secret-id $2 --query SecretString --output text > /dev/null
-  if [ $? -ne 0 ]; then
-    echo "Could not retrieve \"$2\" from SecretsManager"
-    exit 10; return 10;
-  else
-    export $1=`aws secretsmanager get-secret-value --secret-id $2 --query SecretString --output text`
-  fi
-}
-
 ERROR=0
 
 # CKAN
@@ -29,17 +7,11 @@ ERROR=0
 
 export CKAN_PORT=${CKAN_PORT:-80}
 export CKAN_SITE_ID=${CKAN_SITE_ID:-default}
+export BYPASS_INIT=${BYPASS_INIT:-0}
 ([ ! -z "$CKAN_SITE_URL" ] && export CKAN_SITE_URL=$CKAN_SITE_URL) || (echo "FATAL: CKAN_SITE_URL is not configured" && ERROR=1)
-if [ -z "SESSION_SECRET" ] && [ -z "SESSION_SECRET_PSID" ]; then
-  echo "FATAL: SESSION_SECRET or SESSION_SECRET_PSID is not configured" && ERROR=1
-else
-  ([ ! -z "$SESSION_SECRET" ] && export SESSION_SECRET=$SESSION_SECRET) || setenv-by-psid SESSION_SECRET $SESSION_SECRET_PSID || ERROR=1
-fi
-if [ -z "APP_UUID" ] && [ -z "APP_UUID_PSID" ]; then
-  echo "FATAL: APP_UUID or APP_UUID_PSID is not configured" && ERROR=1
-else
-  ([ ! -z "$APP_UUID" ] && export APP_UUID=$APP_UUID) || setenv-by-psid APP_UUID $APP_UUID_PSID || ERROR=1
-fi
+([ ! -z "$SESSION_SECRET" ] && export SESSION_SECRET=$SESSION_SECRET) || (echo "FATAL: SESSION_SECRET is not configured" && ERROR=1)
+([ ! -z "$APP_UUID" ] && export APP_UUID=$APP_UUID) || (echo "FATAL: APP_UUID is not configured" && ERROR=1)
+([ ! -z "$CKAN_API_TOKEN_SECRET" ] && export CKAN_API_TOKEN_SECRET=$CKAN_API_TOKEN_SECRET) || (echo "FATAL: CKAN_API_TOKEN_SECRET is not configured" && ERROR=1)
 
 # POSTGRES
 # configuration for the postgresql database
@@ -47,11 +19,7 @@ fi
 export POSTGRES_DB=${POSTGRES_DB:-ckan_default}
 export POSTGRES_USER=${POSTGRES_USER:-ckan_default}
 export POSTGRES_PORT=${POSTGRES_PORT:-5432}
-if [ -z "POSTGRES_PASSWORD" ] && [ -z "POSTGRES_PASSWORD_PSID" ]; then
-  echo "FATAL: POSTGRES_PASSWORD or POSTGRES_PASSWORD_PSID is not configured" && ERROR=1
-else
-  ([ ! -z "$POSTGRES_PASSWORD" ] && export POSTGRES_PASSWORD=$POSTGRES_PASSWORD) || setenv-by-psid POSTGRES_PASSWORD $POSTGRES_PASSWORD_PSID || ERROR=1
-fi
+([ ! -z "$POSTGRES_PASSWORD" ] && export POSTGRES_PASSWORD=$POSTGRES_PASSWORD) || (echo "FATAL: POSTGRES_PASSWORD is not configured" && ERROR=1)
 ([ ! -z "$POSTGRES_FQDN" ] && export POSTGRES_FQDN=$POSTGRES_FQDN) || (echo "FATAL: POSTGRES_FQDN is not configured" && ERROR=1)
 export CKAN_SQLALCHEMY_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_FQDN}/${POSTGRES_DB}
 
@@ -64,7 +32,7 @@ export CKAN_DATASTORE_WRITE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWOR
 export CKAN_DATASTORE_READ_URL=postgresql://${DATASTORE_ROLENAME}:${POSTGRES_PASSWORD}@${POSTGRES_FQDN}/${DATASTORE_DB}
 
 # REDIS
-# configuration for the redis database
+# configuration for the redis cache database
 
 export REDIS_PORT=${REDIS_PORT:-6379}
 export REIDS_DBID=${REDIS_DBID:-1}
@@ -95,28 +63,22 @@ export SMTP_FQDN=${SMTP_FQDN:-email-smtp.us-east-1.amazonaws.com}
 export SMTP_PORT=${SMTP_PORT:-587}
 export CKAN_SMTP_STARTTLS=${CKAN_SMTP_STARTTLS:-True}
 export CKAN_SMTP_SERVER=${SMTP_FQDN}:${SMTP_PORT}
-if [ -z "$CKAN_SMTP_USER" ] && [ -z "$CKAN_SMTP_USER_SMID" ]; then
-  echo "FATAL: CKAN_SMTP_USER or CKAN_SMTP_USER_SMID is not configured" && ERROR=1
-else
-  ([ ! -z "$CKAN_SMTP_USER" ] && export CKAN_SMTP_USER=$CKAN_SMTP_USER) || setenv-by-smid CKAN_SMTP_USER $CKAN_SMTP_USER_SMID || ERROR=1
-fi
-if [ -z "$CKAN_SMTP_PASSWORD" ] && [ -z "$CKAN_SMTP_PASSWORD_SMID" ]; then
-  echo "FATAL: CKAN_SMTP_PASSWORD or CKAN_SMTP_PASSWORD_SMID is not configured" && ERROR=1
-else
-  ([ ! -z "$CKAN_SMTP_PASSWORD" ] && export CKAN_SMTP_PASSWORD=$CKAN_SMTP_PASSWORD) || setenv-by-smid CKAN_SMTP_PASSWORD $CKAN_SMTP_PASSWORD_SMID || ERROR=1
-fi
-([ ! -z "$CKAN_SMTP_MAIL_TO" ] && export CKAN_SMTP_MAIL_TO=$CKAN_SMTP_MAIL_TO) || (echo "FATAL: CKAN_SMTP_MAIL_TO is not configured" && ERROR=1)
+([ ! -z "$CKAN_SMTP_USER" ] && export CKAN_SMTP_USER=$CKAN_SMTP_USER) || (echo "FATAL: CKAN_SMTP_USER is not configured" && ERROR=1)
+([ ! -z "$CKAN_SMTP_PASSWORD" ] && export CKAN_SMTP_PASSWORD=$CKAN_SMTP_PASSWORD) || (echo "FATAL: CKAN_SMTP_PASSWORD is not configured" && ERROR=1)
 ([ ! -z "$CKAN_SMTP_MAIL_FROM" ] && export CKAN_SMTP_MAIL_FROM=$CKAN_SMTP_MAIL_FROM) || (echo "FATAL: CKAN_SMTP_MAIL_FROM is not configured" && ERROR=1)
+
+([ ! -z "$CKAN_SMTP_ERROR_MAIL_TO" ] && export CKAN_SMTP_ERROR_MAIL_TO=$CKAN_SMTP_ERROR_MAIL_TO) || (echo "WARNING: CKAN_SMTP_ERROR_MAIL_TO is not configured, error emails will not be sent")
+([ ! -z "$CKAN_SMTP_ERROR_MAIL_FROM" ] && export CKAN_SMTP_ERROR_MAIL_FROM=$CKAN_SMTP_ERROR_MAIL_FROM) || (echo "WARNING: CKAN_SMTP_ERROR_MAIL_FROM is not configured, error emails will not be sent")
 
 # ERROR
 # if any configuration errors have occured, we will need to exit
 
 if [ $ERROR -eq 1 ]; then
-  echo "Configuration errors above must be corrected before this container can start.  Ensure all environment variables are set properly."
+  echo "The container environment configuration must be corrected, aborting..."
   echo "$@" >&2
   exit 1
 else
-  echo "All environment variables are properly set."
+  echo "The container environment configuration evaluation completed successfully, moving on..."
 fi
 
 function waitfor() {
@@ -134,49 +96,37 @@ waitfor $SOLR_FQDN $SOLR_PORT
 waitfor $REDIS_FQDN $REDIS_PORT
 waitfor $DATAPUSHER_FQDN $DATAPUSHER_PORT
 
-# TODO: Improve initialization workflow
-# if (database not configured):
-#   db init
-#   db migrate?
-#   sysadmin add admin account
-# else:
-#   do nothing
+echo "Applying environment settings to the $CKAN_INI file"
+CKAN_INI_UNCONFIGURED="${CKAN_INI}.unconfigured"
+envsubst < $CKAN_INI_UNCONFIGURED > $CKAN_INI
 
-# create the datastore_user if it does not exist
-read rolname <<< `psql -X "$CKAN_SQLALCHEMY_URL" --single-transaction --set ON_ERROR_STOP=1 --no-align -t --field-separator ' ' --quiet -c "SELECT rolname FROM pg_catalog.pg_roles WHERE rolname = '$DATASTORE_ROLENAME'"`
-if [ "${rolname}" != "${DATASTORE_ROLENAME}" ]; then
-  echo "Creating the '$DATASTORE_ROLENAME' role"
-  psql "$CKAN_SQLALCHEMY_URL" -c "CREATE ROLE ${DATASTORE_ROLENAME} NOSUPERUSER NOCREATEDB NOCREATEROLE LOGIN PASSWORD '${POSTGRES_PASSWORD}'"
-else
-  echo "The '$DATASTORE_ROLENAME' role already exists"
+if [ "$BYPASS_INIT" != "1" ]; then
+  # create the datastore_user if it does not exist
+  read rolname <<< `psql -X "$CKAN_SQLALCHEMY_URL" --single-transaction --set ON_ERROR_STOP=1 --no-align -t --field-separator ' ' --quiet -c "SELECT rolname FROM pg_catalog.pg_roles WHERE rolname = '$DATASTORE_ROLENAME'"`
+  if [ "${rolname}" != "${DATASTORE_ROLENAME}" ]; then
+    echo "Creating Datastore User/Role: $DATASTORE_ROLENAME"
+    psql "$CKAN_SQLALCHEMY_URL" -c "CREATE ROLE ${DATASTORE_ROLENAME} NOSUPERUSER NOCREATEDB NOCREATEROLE LOGIN PASSWORD '${POSTGRES_PASSWORD}'" > /dev/null 2>&1
+    echo "Datastore User/Role was created"
+  else
+    echo "Datastore User/Role already exists"
+  fi
+  # create the datastore database if it does not exists
+  read datname <<< `psql -X "$CKAN_SQLALCHEMY_URL" --single-transaction --set ON_ERROR_STOP=1 --no-align -t --field-separator ' ' --quiet -c "SELECT datname FROM pg_catalog.pg_database WHERE datname = '$DATASTORE_DB'"`
+  if [ "${datname}" != "${DATASTORE_DB}" ]; then
+    echo "Creating Database Catalog: $DATABASE_DB"
+    psql "$CKAN_SQLALCHEMY_URL" -c "CREATE DATABASE ${DATASTORE_DB} OWNER ${POSTGRES_USER} ENCODING 'utf-8'" > /dev/null 2>&1
+    psql "$CKAN_SQLALCHEMY_URL" -c "GRANT ALL PRIVILEGES ON DATABASE ${DATASTORE_DB} TO ${POSTGRES_USER}" > /dev/null 2>&1
+    echo "Database Catalog $DATABASE_DB was created"
+  else
+    echo "Database Catalog $DATABASE_DB already exists"
+  fi
+  # Initialize the Postgres Database
+  echo "Databases Initializing"
+  ckan db init > /dev/null
+  echo "Database Initialization Complete"
+  # Set the Postgres Datastore Database Permissions
+  echo "Datastore Permissions Initializing"
+  ckan datastore set-permissions | psql "$CKAN_DATASTORE_WRITE_URL" --set ON_ERROR_STOP=1 > /dev/null
+  echo "Datastore Permissions Initialzation Complete"
 fi
-
-# create the datastore database if it does not exists
-read datname <<< `psql -X "$CKAN_SQLALCHEMY_URL" --single-transaction --set ON_ERROR_STOP=1 --no-align -t --field-separator ' ' --quiet -c "SELECT datname FROM pg_catalog.pg_database WHERE datname = '$DATASTORE_DB'"`
-if [ "${datname}" != "${DATASTORE_DB}" ]; then
-  echo "Creating the '$DATASTORE_DB' database catalog"
-  psql "$CKAN_SQLALCHEMY_URL" -c "CREATE DATABASE ${DATASTORE_DB} OWNER ${POSTGRES_USER} ENCODING 'utf-8'"
-  psql "$CKAN_SQLALCHEMY_URL" -c "GRANT ALL PRIVILEGES ON DATABASE ${DATASTORE_DB} TO ${POSTGRES_USER}"
-else
-  echo "The '$DATASTORE_DB' database already exists"
-fi
-
-echo "Running: envsubst"
-CONFIG="${CKAN_CONFIG}/production.ini"
-UNCONFIGURED_CONFIG="${CONFIG}.unconfigured"
-envsubst < $UNCONFIGURED_CONFIG > $CONFIG
-
-echo "Running: db init"
-ckan-paster --plugin=ckan db init -c "$CONFIG"
-
-echo "Running: datastore set-permissions"
-ckan-paster --plugin=ckan datastore set-permissions -c ${CONFIG} | psql "$CKAN_DATASTORE_WRITE_URL" --set ON_ERROR_STOP=1
-
-# To create an admin user at startup for testing purposes, uncomment the following
-#echo "Running: sysadmin add"
-#ckan_admin_username=admin
-#ckan_admin_email=admin@example.com
-#yes | ckan-paster --plugin=ckan sysadmin add ${ckan_admin_username} email=${ckan_admin_email} password=${POSTGRES_PASSWORD} --config "$CONFIG"
-
-echo "Runing: exec"
 exec "$@"
