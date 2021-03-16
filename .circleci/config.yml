@@ -4,21 +4,17 @@ executors:
   default:
     docker:
       - image: circleci/node
-  docker-awscli:
+  python:
     docker:
-      - image: ussba/cc-docker-git-aws
-  docker-poirot:
-    docker:
-      - image: ussba/poirot:3
+    - image: cimg/python:3.9
 
 commands:
-  poirotscan:
+  install-aws:
     steps:
-      - checkout
       - run:
-          name: Scanning for PII (Poirot)
+          name: install aws
           command: |
-            poirot --patterns https://raw.githubusercontent.com/USSBA/sba-gov-ckan/master/poirot-patterns.txt --revlist="master^..HEAD"
+            pip install awscli
   dockerbuild:
     parameters:
       container:
@@ -112,6 +108,7 @@ commands:
     steps:
       - checkout
       - setup_remote_docker
+      - install-aws
       - cache_restore:
           container: << parameters.container >>
       - dockertag:
@@ -122,100 +119,78 @@ commands:
 
 
 jobs:
-  poirot:
-    executor: docker-poirot
-    steps:
-      - poirotscan
-  dockerBuildCkan:
+  docker-build:
+    parameters:
+      container:
+        type: string
     executor: default
     steps:
       - dockerbuild:
-          container: ckan
-  dockerBuildCkanSolr:
-    executor: default
-    steps:
-      - dockerbuild:
-          container: ckan-solr
-  dockerBuildCkanDatapusher:
-    executor: default
-    steps:
-      - dockerbuild:
-          container: ckan-datapusher
-  snykScanCkan:
+          container: << parameters.container >>
+  snyk-scan:
+    parameters:
+      container:
+        type: string
     executor: default
     steps:
       - snykscan:
-          container: ckan
-  snykScanCkanSolr:
-    executor: default
-    steps:
-      - snykscan:
-          container: ckan-solr
-  snykScanCkanDatapusher:
-    executor: default
-    steps:
-      - snykscan:
-          container: ckan-datapusher
-  uploadToEcrCkan:
-    executor: docker-awscli
+          container: << parameters.container >>
+  upload-to-ecr:
+    parameters:
+      container:
+        type: string
+    executor: python
     steps:
       - ecr_upload:
-          container: ckan
-  uploadToEcrCkanSolr:
-    executor: docker-awscli
-    steps:
-      - ecr_upload:
-          container: ckan-solr
-  uploadToEcrCkanDatapusher:
-    executor: docker-awscli
-    steps:
-      - ecr_upload:
-          container: ckan-datapusher
+          container: << parameters.container >>
+
 
 workflows:
   version: 2
-  branch_workflow:
+  docker:
     jobs:
-      - poirot
-      - dockerBuildCkan
-      - snykScanCkan:
-          requires:
-            - dockerBuildCkan
-          context: snyk
-      - uploadToEcrCkan:
-          context: sba-gov-upper
-          requires:
-            - dockerBuildCkan
-            - dockerBuildCkanSolr
-            - dockerBuildCkanDatapusher
+      # CKAN
+      - docker-build:
+          name: Docker Build CKAN
+          container: ckan
+      - snyk-scan:
+          name: Snyk Scan CKAN
+          container: ckan
+          requires: [Docker Build CKAN]
+      - upload-to-ecr:
+          name: Upload to ECR CKAN
+          container: ckan
+          requires: [Docker Build CKAN, Docker Build Solr, Docker Build Datapusher]
           filters:
             branches:
               only: master
-      - dockerBuildCkanSolr
-      - snykScanCkanSolr:
-          requires:
-            - dockerBuildCkanSolr
-          context: snyk
-      - uploadToEcrCkanSolr:
-          context: sba-gov-upper
-          requires:
-            - dockerBuildCkan
-            - dockerBuildCkanSolr
-            - dockerBuildCkanDatapusher
+      # Solr
+      - docker-build:
+          name: Docker Build Solr
+          container: ckan-solr
+      - snyk-scan:
+          name: Snyk Scan Solr
+          container: ckan-solr
+          requires: [Docker Build Solr]
+      - upload-to-ecr:
+          name: Upload to ECR Solr
+          container: ckan-solr
+          requires: [Docker Build CKAN, Docker Build Solr, Docker Build Datapusher]
           filters:
             branches:
               only: master
-      - dockerBuildCkanDatapusher
-      - snykScanCkanDatapusher:
-          requires:
-            - dockerBuildCkanDatapusher
-          context: snyk
-      - uploadToEcrCkanDatapusher:
-          context: sba-gov-upper
-          requires:
-            - dockerBuildCkan
-            - dockerBuildCkanSolr
-            - dockerBuildCkanDatapusher
+      # Datapusher
+      - docker-build:
+          name: Docker Build Datapusher
+          container: ckan-datapusher
+      - snyk-scan:
+          name: Snyk Scan Datapusher
+          container: ckan-datapusher
+          requires: [Docker Build Datapusher]
+      - upload-to-ecr:
+          name: Upload to ECR Datapusher
+          container: ckan-datapusher
+          requires: [Docker Build CKAN, Docker Build Solr, Docker Build Datapusher]
           filters:
             branches:
               only: master
