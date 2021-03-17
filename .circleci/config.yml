@@ -155,10 +155,12 @@ workflows:
           container: ckan
       - snyk-scan:
           name: Snyk Scan CKAN
+          context: snyk
           container: ckan
           requires: [Docker Build CKAN]
       - upload-to-ecr:
           name: Upload to ECR CKAN
+          context: sba-gov-upper
           container: ckan
           requires: [Docker Build CKAN, Docker Build Solr, Docker Build Datapusher]
           filters:
@@ -170,10 +172,12 @@ workflows:
           container: ckan-solr
       - snyk-scan:
           name: Snyk Scan Solr
+          context: snyk
           container: ckan-solr
           requires: [Docker Build Solr]
       - upload-to-ecr:
           name: Upload to ECR Solr
+          context: sba-gov-upper
           container: ckan-solr
           requires: [Docker Build CKAN, Docker Build Solr, Docker Build Datapusher]
           filters:
@@ -185,10 +189,12 @@ workflows:
           container: ckan-datapusher
       - snyk-scan:
           name: Snyk Scan Datapusher
+          context: snyk
           container: ckan-datapusher
           requires: [Docker Build Datapusher]
       - upload-to-ecr:
           name: Upload to ECR Datapusher
+          context: sba-gov-upper
           container: ckan-datapusher
           requires: [Docker Build CKAN, Docker Build Solr, Docker Build Datapusher]
           filters:
