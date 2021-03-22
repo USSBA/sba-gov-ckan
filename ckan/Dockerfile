@@ -74,6 +74,8 @@ RUN cp $CKAN_SRC/tmp/promoted.html $CKAN_SRC/ckan/templates/home/snippets/promot
 RUN cp $CKAN_SRC/tmp/header.html $CKAN_SRC/ckan/templates/header.html
 # Add extra helper functions
 RUN cat $CKAN_SRC/tmp/extra-helper-functions.py >> $CKAN_SRC/ckan/lib/helpers.py
+# Override robots.txt
+RUN cp $CKAN_SRC/tmp/robots.txt $CKAN_SRC/ckan/public/robots.txt
 
 # customize container entrypoint that will configure the application
 COPY ckan-entrypoint.sh /ckan-entrypoint.sh
@@ -83,4 +85,4 @@ ENV CKAN_INI=/etc/ckan/production.ini
 ENV CKAN_PORT=5000
 
 ENTRYPOINT ["/ckan-entrypoint.sh"]
-CMD ["bash", "-c", "ckan run --host 0.0.0.0 --port $CKAN_PORT"]
+CMD ["bash", "-c", "ckan run --host 0.0.0.0 --port $CKAN_PORT --threaded"]
