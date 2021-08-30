@@ -34,6 +34,7 @@ services:
     - SOLR_FQDN=solr
     - DATAPUSHER_FQDN=datapusher
     - CKAN_SITE_URL=http://sba.ckan.com
+    - CKAN_DATAPUSHER_CALLBACK_URL=http://sba.ckan.com
     - CKAN_SMTP_ERROR_MAIL_TO=devops@sba.ckan.com
     - CKAN_SMTP_ERROR_MAIL_FROM=errors@sba.ckan.com
     - CKAN_SMTP_MAIL_FROM=admin@sba.ckan.com
