@@ -12,6 +12,91 @@ Custom Docker Images
 
 ![Network Diagram](docs/images/ckan-network.png)
 
+## User Management
+
+The purpose of this section is to demonstrate how user accounts can be created, password can be reset, and if necessary promote a user to sysadmin status using the ckan command line utility from a running container. This section assumes that you are using the docker-compose solution provided and that CKAN services are already running on your local machine or that you have a running AWS Fargate service.
+
+
+### How to gain access to the running container
+
+Please be sure that the present working directory is the root of this project and the following software has been installed and configured.
+
+- docker
+- docker-comose
+- awscli
+- jq
+
+If you are running CKAN using the provided `docker-compose` solution then you can gain shell access to the running container using the following command.
+
+```
+$ docker-compose exec ckan /bin/bash
+```
+
+If you are running CKAN as a Fargate service in AWS then you can gain shell accesss to the running container considering the service has the [execute-command](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_service#enable_execute_command) enabled. At the root of this repository we have crafted a shell script named `fargate-service-list.sh` that will generate the `awscli` command necessary for connecting to a running running service task.
+
+Simply run the script which will prompt for some information:
+
+- Choose an ECS Cluster
+- Then choose the ECS Service found on that cluster
+- Then choose the ECS task running under the provision of that service
+
+It will then generate a command to copy and paste which will look like the following example:
+
+```
+  aws ecs execute-command --interactive --cluster production \
+    --task 11223344556677889900 --container ckan --command '/bin/bash'
+```
+
+
+### How to use the ckan command line
+
+Display a list of users.
+
+```
+$ ckan user list
+```
+
+Creating a new user.
+
+```
+# with prompt
+$ ckan user add 'username'
+
+# without prompt
+$ ckan user add 'username' email='email' password='password'
+```
+
+Reset a users password.
+
+```
+$ ckan user setpass 'username'
+```
+
+Remove a user.
+
+```
+$ ckan user remove 'username'
+```
+
+Display a list of sysadmin users.
+
+```
+$ ckan sysadmin list
+```
+
+Promote a user to sysadmin.
+
+```
+$ ckan sysadmin add 'username'
+```
+
+Demote a sysadmin user.
+
+```
+$ ckan sysadmin remove 'username'
+```
+
+
 ## Local Development
 
 Requirements are:
