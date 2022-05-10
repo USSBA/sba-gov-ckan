@@ -9,7 +9,7 @@ module "postgres" {
   hosted_zone_id      = local.env.hosted_zone_id
   vpc_id              = data.aws_vpc.ckan.id
   allowed_cidr_blocks = [data.aws_vpc.ckan.cidr_block]
-  subnet_ids          = data.aws_subnet_ids.private.ids
+  subnet_ids          = data.aws_subnets.private.ids
   snapshot_identifier = "ckan-${terraform.workspace}-migration"
   tags = {
     BackupWeekly    = "true"
