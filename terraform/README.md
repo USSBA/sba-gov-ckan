@@ -46,21 +46,23 @@ Information regarding files in the applications directory
 The terraform files in the applications directory contains the configuration needed to deploy the CKAN application
 
 - ckan.tf: Contains configuration for CKAN web application
-- cluster.tf: Contains configuration for the AWS clusters
+- cluster.tf: Contains configuration for the ECS cluster
 - dns.tf: Contains configuration for DomainName Service
-- locals.tf: Conatains global variables for CKAN application 
+- locals.tf: Contains global variables for modules
 - solr.tf: Contains configuration for the SOLR container
 - vpc.tf: Contains VPC configuration for CKAN AWS VPC
-- cloudfront.tf: Contains AWS cloudFront config for CKAN
-- datapusher.tf: Contains configuration for the datapusher container  
-- efs.tf: Contains infrastructure configuration for SOLR container 
-- versions.tf: Contains configuration about Terraform/AWS versions
+- cloudfront.tf: Contains AWS CloudFront config for CKAN
+- datapusher.tf: Contains configuration for the datapusher container
+- efs.tf: Contains infrastructure configuration for SOLR container
+- versions.tf: Contains configuration for Terraform/AWS versions & providers
 - service-list.sh: Can be used to remote EXEC into a FARGATE container
 
 ### Databases Directory
 
-- infrastructure-resources.tf: Contains terraform infrastrusture configuration for CKAN 
-- locals.tf: Conatains global for database configuration
-- postgres.tf: Contains Postgress DB configuration 
-- redis.tf: Contains DB elastiCache configuraton 
-- versions.tf: Contains Terraform versions information
+Information regarding files in the databases directory
+
+- infrastructure-resources.tf: Contains data elements used for infrastructure code
+- locals.tf: Conatains global variables for modules
+- postgres.tf: Contains Postgress DB configuration
+- redis.tf: Contains ElastiCache Redis configuraton
+- versions.tf: Contains configuration for Terraform/AWS versions & providers
