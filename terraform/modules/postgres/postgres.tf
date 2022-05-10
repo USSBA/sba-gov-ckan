@@ -41,7 +41,7 @@ variable "snapshot_identifier" {
 # postgres
 module "rds" {
   source  = "terraform-aws-modules/rds/aws"
-  version = "~> 2.22, < 3.0.0"
+  version = "~> 4.0"
 
   # storage
   allocated_storage = 60
@@ -49,29 +49,34 @@ module "rds" {
   storage_type      = "gp2"
 
   # maintenance and backup
-  backup_retention_period   = 35
-  backup_window             = "03:30-04:30"
-  copy_tags_to_snapshot     = true
-  final_snapshot_identifier = "${var.name}-final"
-  identifier                = var.name
-  maintenance_window        = "sun:00:00-sun:03:00"
-  skip_final_snapshot       = true
+  backup_retention_period          = 35
+  backup_window                    = "03:30-04:30"
+  copy_tags_to_snapshot            = true
+  final_snapshot_identifier_prefix = "${var.name}-final"
+  identifier                       = var.name
+  maintenance_window               = "sun:00:00-sun:03:00"
+  skip_final_snapshot              = true
 
   # instance
-  deletion_protection  = false
-  engine               = "postgres"
-  engine_version       = "11.13"
-  family               = "postgres11"
-  instance_class       = var.instance_class
-  major_engine_version = 11
-  multi_az             = true
-  name                 = var.database_name
-  port                 = 5432
-  snapshot_identifier  = var.snapshot_identifier
+  deletion_protection = false
+  # create_db_subnet_group is now set to false by default in the new module version
+  # which tries to destroy the current subnet group.
+  create_db_subnet_group = true
+  engine                 = "postgres"
+  engine_version         = "11.13"
+  family                 = "postgres11"
+  instance_class         = var.instance_class
+  major_engine_version   = 11
+  multi_az               = true
+  db_name                = var.database_name
+  port                   = 5432
+  snapshot_identifier    = var.snapshot_identifier
 
   # credentials
   password = var.database_password
   username = var.database_username
+  # update module has create_random_password set to true, which we do not want.
+  create_random_password = false
 
   # networking
   subnet_ids             = var.subnet_ids
@@ -79,6 +84,8 @@ module "rds" {
 
   # tags
   tags = var.tags
+  # new module version has added a new db_instance_tag attribute
+  db_instance_tags = { "Name" = var.name }
 }
 
 # dns
@@ -87,7 +94,7 @@ resource "aws_route53_record" "postgres" {
   name    = var.fqdn
   type    = "CNAME"
   ttl     = "300"
-  records = [module.rds.this_db_instance_address]
+  records = [module.rds.db_instance_address]
 }
 
 # security group
