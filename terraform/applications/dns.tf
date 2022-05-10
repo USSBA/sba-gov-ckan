@@ -8,6 +8,7 @@ resource "aws_route53_record" "cloudfront" {
     evaluate_target_health = false
   }
 }
+
 resource "aws_route53_record" "domain" {
   zone_id = local.env.hosted_zone_id
   name    = local.env.domain_name
