@@ -36,3 +36,31 @@ Resources to support backing up SBA.gov services
   - UrlToUrlRedirect staging/production
 
 At this time, AWS Backups does not support Aurora RDS, so backups are managed natively within Aurora, plus an external db-dump service
+
+## Directories
+
+### Application Directory
+
+Information regarding files in the applications directory
+
+The terraform files in the applications directory contains the configuration needed to deploy the CKAN application
+
+- ckan.tf: Contains configuration for CKAN web application
+- cluster.tf: Contains configuration for the AWS clusters
+- dns.tf: Contains configuration for DomainName Service
+- locals.tf: Conatains global variables for CKAN application 
+- solr.tf: Contains configuration for the SOLR container
+- vpc.tf: Contains VPC configuration for CKAN AWS VPC
+- cloudfront.tf: Contains AWS cloudFront config for CKAN
+- datapusher.tf: Contains configuration for the datapusher container  
+- efs.tf: Contains infrastructure configuration for SOLR container 
+- versions.tf: Contains configuration about Terraform/AWS versions
+- service-list.sh: Can be used to remote EXEC into a FARGATE container
+
+### Databases Directory
+
+- infrastructure-resources.tf: Contains terraform infrastrusture configuration for CKAN 
+- locals.tf: Conatains global for database configuration
+- postgres.tf: Contains Postgress DB configuration 
+- redis.tf: Contains DB elastiCache configuraton 
+- versions.tf: Contains Terraform versions information
