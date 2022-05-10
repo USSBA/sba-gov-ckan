@@ -4,9 +4,11 @@ data "aws_vpc" "ckan" {
   }
 }
 
-# subnet ids
-data "aws_subnet_ids" "private" {
-  vpc_id = data.aws_vpc.ckan.id
+data "aws_subnets" "private" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.ckan.id]
+  }
   filter {
     name = "tag:Name"
     values = [
@@ -14,3 +16,4 @@ data "aws_subnet_ids" "private" {
     ]
   }
 }
+
