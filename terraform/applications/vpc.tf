@@ -1,6 +1,6 @@
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 2.77, < 3.0"
+  version = "~> 3.0"
 
   # general settings
   azs                  = local.env.zones

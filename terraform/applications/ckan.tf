@@ -16,7 +16,7 @@ locals {
 
 module "ckan_web" {
   source  = "USSBA/easy-fargate-service/aws"
-  version = "~> 6.3"
+  version = "~> 7.0"
   #source = "../../../terraform-aws-easy-fargate-service"
 
   # logging
