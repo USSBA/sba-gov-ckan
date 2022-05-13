@@ -179,7 +179,7 @@ commands:
             }
             cd << parameters.folder >> || throw_error "FATAL: command 'cd << parameters.folder >>' has failed"
             terraform workspace select << parameters.workspace >> || throw_error "FATAL: command 'terraform workspace select << parameters.workspace >>' has failed"
-            terraform plan -out=<< parameters.workspace >>.tfplan -input=false || throw_error "FATAL: command 'terraform plan -out=<< parameters.workspace >>.tfplan -input=false' has failed"
+            terraform plan -var image_tag=${CIRCLE_TAG} -out=<< parameters.workspace >>.tfplan -input=false || throw_error "FATAL: command 'terraform plan -out=<< parameters.workspace >>.tfplan -input=false' has failed"
   #terraform-apply:
   #  parameters:
   #    folder:
@@ -267,7 +267,7 @@ jobs:
           image_name: ckan
       - ecr-image-push:
           image_name: ckan
-  ckan-datapusher-build:
+  ckan-datapusher-build-push:
     executor: circle-machine
     steps:
       - checkout
@@ -278,7 +278,7 @@ jobs:
           image_name: ckan-datapusher
       - ecr-image-push:
           image_name: ckan-datapusher
-  ckan-solr-build:
+  ckan-solr-build-push:
     executor: circle-machine
     steps:
       - checkout
@@ -328,12 +328,34 @@ workflows:
           tags:
             only:
             - /rc-v[0-9]+(\.[0-9]+)*$/
+    - ckan-datapusher-build-push:
+        name: ckan-datapusher-build-push
+        context: sba-gov-upper
+        filters:
+          branches:
+            ignore:
+            - /.*/
+          tags:
+            only:
+            - /rc-v[0-9]+(\.[0-9]+)*$/
+    - ckan-solr-build-push:
+        name: ckan-solr-build-push
+        context: sba-gov-upper
+        filters:
+          branches:
+            ignore:
+            - /.*/
+          tags:
+            only:
+            - /rc-v[0-9]+(\.[0-9]+)*$/
     - test-terraform-plan:
         name: test-terraform-plan-stg
         context: sba-gov-upper
         workspace: staging
         requires:
         - ckan-build-push
+        - ckan-datapusher-build-push
+        - ckan-solr-build-push
         filters:
           branches:
             ignore:
