@@ -328,6 +328,7 @@ workflows:
           tags:
             only:
             - /rc-v[0-9]+(\.[0-9]+)*$/
+            - /v[0-9]+(\.[0-9]+)*$/
     - ckan-datapusher-build-push:
         name: ckan-datapusher-build-push
         context: sba-gov-upper
@@ -338,6 +339,7 @@ workflows:
           tags:
             only:
             - /rc-v[0-9]+(\.[0-9]+)*$/
+            - /v[0-9]+(\.[0-9]+)*$/
     - ckan-solr-build-push:
         name: ckan-solr-build-push
         context: sba-gov-upper
@@ -348,8 +350,9 @@ workflows:
           tags:
             only:
             - /rc-v[0-9]+(\.[0-9]+)*$/
+            - /v[0-9]+(\.[0-9]+)*$/
     - test-terraform-plan:
-        name: test-terraform-plan-stg
+        name: test-terraform-plan
         context: sba-gov-upper
         workspace: staging
         requires:
@@ -363,12 +366,13 @@ workflows:
           tags:
             only:
             - /rc-v[0-9]+(\.[0-9]+)*$/
+            - /v[0-9]+(\.[0-9]+)*$/
     - ckan-deploy-services:
         name: ckan-deploy-services-stg
         context: sba-gov-upper
         workspace: staging
         requires:
-          - test-terraform-plan-stg
+          - test-terraform-plan
         filters:
           branches:
             ignore:
@@ -376,41 +380,16 @@ workflows:
           tags:
             only:
             - /rc-v[0-9]+(\.[0-9]+)*$/
-  #  - test-terraform-plan:
-  #      name: test-terraform-plan-prod
-  #      context: sba-gov-upper
-  #      workspace: prod
-  #      requires:
-  #      - build-and-push-containers-upper
-  #      filters:
-  #        branches:
-  #          ignore:
-  #          - /.*/
-  #        tags:
-  #          only:
-  #          - /v[0-9]+(\.[0-9]+)*$/
-  #  - hold-for-approval:
-  #      type: approval
-  #      context: sba-gov-upper
-  #      requires:
-  #        - test-terraform-plan-prod
-  #      filters:
-  #        branches:
-  #          ignore:
-  #          - /.*/
-  #        tags:
-  #          only:
-  #          - /v[0-9]+(\.[0-9]+)*$/
-  #  - deploy-service:
-  #      name: deploy-service-prod
-  #      context: sba-gov-upper
-  #      workspace: prod
-  #      requires:
-  #      - hold-for-approval
-  #      filters:
-  #        branches:
-  #          ignore:
-  #          - /.*/
-  #        tags:
-  #          only:
-  #          - /v[0-9]+(\.[0-9]+)*$/
+    - ckan-deploy-services:
+        name: ckan-deploy-services-prod
+        context: sba-gov-upper
+        workspace: production
+        requires:
+        - test-terraform-plan
+        filters:
+          branches:
+            ignore:
+            - /.*/
+          tags:
+            only:
+            - /v[0-9]+(\.[0-9]+)*$/
