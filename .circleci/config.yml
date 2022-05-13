@@ -180,25 +180,25 @@ commands:
             cd << parameters.folder >> || throw_error "FATAL: command 'cd << parameters.folder >>' has failed"
             terraform workspace select << parameters.workspace >> || throw_error "FATAL: command 'terraform workspace select << parameters.workspace >>' has failed"
             terraform plan -var image_tag=${CIRCLE_TAG} -out=<< parameters.workspace >>.tfplan -input=false || throw_error "FATAL: command 'terraform plan -out=<< parameters.workspace >>.tfplan -input=false' has failed"
-  #terraform-apply:
-  #  parameters:
-  #    folder:
-  #      type: string
-  #      description: A relative path from the project root in which to perform terrafrom apply
-  #    workspace:
-  #      type: string
-  #      description: A workspace in which to perform terraform apply
-  #  steps:
-  #    - deploy:
-  #        name: Terraform Apply
-  #        command: |
-  #          throw_error() {
-  #            echo $1
-  #            return 1
-  #          }
-  #          cd << parameters.folder >> || ( echo "directory << parameters.folder >> does not exist"; exit 1 )
-  #          terraform workspace select << parameters.workspace >> || ( echo "terraform workspace select << parameters.workspace >> has failed"; exit 1 )
-  #          terraform apply -input=false << parameters.workspace >>.tfplan || ( echo "terraform apply has failed"; exit 1 )
+  terraform-apply:
+    parameters:
+      folder:
+        type: string
+        description: A relative path from the project root in which to perform terrafrom apply
+      workspace:
+        type: string
+        description: A workspace in which to perform terraform apply
+    steps:
+      - deploy:
+          name: Terraform Apply
+          command: |
+            throw_error() {
+              echo $1
+              return 1
+            }
+            cd << parameters.folder >> || ( echo "directory << parameters.folder >> does not exist"; exit 1 )
+            terraform workspace select << parameters.workspace >> || ( echo "terraform workspace select << parameters.workspace >> has failed"; exit 1 )
+            terraform apply -var image_tag=${CIRCLE_TAG} -input=false << parameters.workspace >>.tfplan || ( echo "terraform apply has failed"; exit 1 )
 
 jobs:
   test-terraform-format:
@@ -289,24 +289,24 @@ jobs:
           image_name: ckan-solr
       - ecr-image-push:
           image_name: ckan-solr
-  #deploy-service:
-  #  executor: base
-  #  parameters:
-  #    workspace:
-  #      type: string
-  #      description: A terraform workspace name
-  #  steps:
-  #    - checkout
-  #    - aws-init
-  #    - terraform-install
-  #    - terraform-init:
-  #        folder: terraform
-  #    - terraform-plan:
-  #        folder: terraform
-  #        workspace: << parameters.workspace >>
-  #    - terraform-apply:
-  #        folder: terraform
-  #        workspace: << parameters.workspace >>
+  ckan-deploy-services:
+    executor: base
+    parameters:
+      workspace:
+        type: string
+        description: A terraform workspace name
+    steps:
+      - checkout
+      - aws-init
+      - terraform-install
+      - terraform-init:
+          folder: terraform/applications
+      - terraform-plan:
+          folder: terraform/applications
+          workspace: << parameters.workspace >>
+      - terraform-apply:
+          folder: terraform/applications
+          workspace: << parameters.workspace >>
 
 workflows:
   version: 2
@@ -363,19 +363,19 @@ workflows:
           tags:
             only:
             - /rc-v[0-9]+(\.[0-9]+)*$/
-  #  - deploy-service:
-  #      name: deploy-service-stg
-  #      context: sba-gov-upper
-  #      workspace: stg
-  #      requires:
-  #        - build-and-push-containers-upper
-  #      filters:
-  #        branches:
-  #          ignore:
-  #          - /.*/
-  #        tags:
-  #          only:
-  #          - /rc-v[0-9]+(\.[0-9]+)*$/
+    - ckan-deploy-services:
+        name: ckan-deploy-services-stg
+        context: sba-gov-upper
+        workspace: staging
+        requires:
+          - test-terraform-plan-stg
+        filters:
+          branches:
+            ignore:
+            - /.*/
+          tags:
+            only:
+            - /rc-v[0-9]+(\.[0-9]+)*$/
   #  - test-terraform-plan:
   #      name: test-terraform-plan-prod
   #      context: sba-gov-upper
