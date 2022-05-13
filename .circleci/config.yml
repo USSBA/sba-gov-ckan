@@ -352,7 +352,7 @@ workflows:
             - /rc-v[0-9]+(\.[0-9]+)*$/
             - /v[0-9]+(\.[0-9]+)*$/
     - test-terraform-plan:
-        name: test-terraform-plan
+        name: test-terraform-plan-stg
         context: sba-gov-upper
         workspace: staging
         requires:
@@ -366,13 +366,12 @@ workflows:
           tags:
             only:
             - /rc-v[0-9]+(\.[0-9]+)*$/
-            - /v[0-9]+(\.[0-9]+)*$/
     - ckan-deploy-services:
         name: ckan-deploy-services-stg
         context: sba-gov-upper
         workspace: staging
         requires:
-          - test-terraform-plan
+          - test-terraform-plan-stg
         filters:
           branches:
             ignore:
@@ -380,12 +379,27 @@ workflows:
           tags:
             only:
             - /rc-v[0-9]+(\.[0-9]+)*$/
+    - test-terraform-plan:
+        name: test-terraform-plan-prod
+        context: sba-gov-upper
+        workspace: production
+        requires:
+        - ckan-build-push
+        - ckan-datapusher-build-push
+        - ckan-solr-build-push
+        filters:
+          branches:
+            ignore:
+            - /.*/
+          tags:
+            only:
+            - /v[0-9]+(\.[0-9]+)*$/
     - ckan-deploy-services:
         name: ckan-deploy-services-prod
         context: sba-gov-upper
         workspace: production
         requires:
-        - test-terraform-plan
+        - test-terraform-plan-prod
         filters:
           branches:
             ignore:
