@@ -30,7 +30,8 @@ RUN mkdir -p $DATAPUSHER_HOME/src
 WORKDIR $DATAPUSHER_HOME/src
 
 # clone the datapusher repository
-RUN git clone -b '0.0.17' https://github.com/ckan/datapusher.git
+# this was 0.0.17, which, is no longer loading certain python modules.
+RUN git clone -b '0.0.18' https://github.com/ckan/datapusher.git
 
 # install datapusher and it's dependencies
 WORKDIR $DATAPUSHER_HOME/src/datapusher

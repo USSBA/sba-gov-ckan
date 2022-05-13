@@ -1,6 +1,10 @@
 data "aws_region" "this" {}
 data "aws_caller_identity" "this" {}
 
+variable "image_tag" {
+  default = "latest"
+}
+
 locals {
   account_id = data.aws_caller_identity.this.account_id
   region     = data.aws_region.this.name
@@ -19,9 +23,9 @@ locals {
       name                 = "ckan-${terraform.workspace}"
       zones                = formatlist("%s%s", local.region, keys(local.zone_map))
       hosted_zone_id       = "Z34GMHAZJS247A"
-      image_tag_datapusher = "v1.2.0"
-      image_tag_solr       = "v1.2.0"
-      image_tag_web        = "v1.2.0"
+      image_tag_datapusher = var.image_tag
+      image_tag_solr       = var.image_tag
+      image_tag_web        = var.image_tag
       rds_username         = "ckan_default"
       rds_database_name    = "ckan_default"
       rds_instance_class   = "db.t3.micro"

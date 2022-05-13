@@ -150,18 +150,40 @@ This project is built with CircleCI and has the configuration [in this repositor
 
 ### Feature Branch
 
-When a new branch (not `master`) is pushed to GitHub, circleci will:
+When a new branch is pushed to GitHub, circleci will:
 
-1) Build the docker image
+1) Tests the docker builds
+1) Runs a terraform fmt
 1) Run a [snyk](https://www.snyk.io) scan on the built image
 
 ### Master Branch
 
-1) Build the docker image
-1) Register the docker image tag with snyk ECR scanning (coming soon!)
-1) Push the docker image to AWS ECR (Elastic Container Registry) with these tags:
-  * `latest`
-  * `<git-hash>` (coming soon)
+No jobs besides the `feature branch` jobs run without a tag. On a Staging or Production tag push the following jobs run:
+
+1) ckan-solr-build-push
+1) ckan-datapusher-build-push
+1) ckan-build-push
+1) test-terraform-plan
+1) deploy-services-${env}
+
+To trigger a tag based deployment please see the instructions below.
+
+### Tag based deployment
+
+To trigger a build/deploy workflow for a specific environment, the following git tags can be used for their respective environments:
+
+* Staging -> `rc-vX.X.X`
+* Production -> `vX.X.X`
+
+Staging Example:
+```sh
+git tag rc-v1.0.0 && git push origin rc-v1.0.0
+```
+
+Production Example:
+```sh
+git tag v1.0.0 && git push origin v1.0.0
+```
 
 ## Contributing
 

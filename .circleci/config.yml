@@ -1,202 +1,409 @@
 version: 2.1
 
+orbs:
+  aws-cli: circleci/aws-cli@1
+  terraform: circleci/terraform@2
+
 executors:
-  default:
+  circle-machine:
+    # Required for multi-container docker-compose setups
+    machine:
+      image: ubuntu-2004:202107-02
+      docker_layer_caching: true
+  base:
     docker:
-      - image: circleci/node
-  python:
-    docker:
-    - image: cimg/python:3.9
+    - image: cimg/base:2020.12
 
 commands:
-  install-aws:
+  build-containers:
     steps:
-      - run:
-          name: install aws
+    - ecr-image-build:
+        image_name: ckan
+        directory: ckan
+    - ecr-image-build:
+        image_name: ckan-datapusher
+        directory: ckan-datapusher
+    - ecr-image-build:
+        image_name: ckan-solr
+        directory: ckan-solr
+  push-containers:
+    steps:
+    - ecr-image-push:
+        image_name: ckan
+    - ecr-image-push:
+        image_name: ckan-datapusher
+    - ecr-image-push:
+        image_name: ckan-solr
+  aws-init:
+    parameters:
+      region:
+        type: string
+        description: A default AWS region name
+        default: us-east-1
+    steps:
+    - aws-cli/setup
+    - run:
+        name: aws-init
+        command: |
+          echo 'AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-<< parameters.region >>}' >> $BASH_ENV
+          echo 'AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)' >> $BASH_ENV
+          echo 'AWS_ECR_ENDPOINT="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"' >> $BASH_ENV
+          source $BASH_ENV
+  ecr-login:
+    steps:
+    - run:
+        name: ecr docker login
+        command: |
+          aws_version=`aws --version 2>&1`
+          if echo $aws_version | grep 'aws-cli/1' > /dev/null; then
+            echo "aws-cli v1 detected. Logging in to ecr docker..."
+            `aws ecr get-login --no-include-email --region ${AWS_DEFAULT_REGION}`
+          elif echo $aws_version | grep 'aws-cli/2' > /dev/null; then
+            echo "aws-cli v2 detected. Logging in to ecr docker..."
+            aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin "${AWS_ECR_ENDPOINT}"
+          else
+            echo "Can't detect the version of awscli being used..."
+            exit 1
+          fi
+  ecr-build-ckan:
+    parameters:
+      dockerfile:
+        type: string
+        default: Dockerfile
+      image_name:
+        type: string
+      directory:
+        type: string
+    steps:
+    - run:
+        name: Build << parameters.dockerfile >> docker image
+        command: |
+          cd "<< parameters.directory >>"
+          docker image build . -f "<< parameters.dockerfile >>" --tag "${AWS_ECR_ENDPOINT}/<< parameters.image_name >>:${CIRCLE_SHA1}"
+  ecr-build-ckan-datapusher:
+    parameters:
+      dockerfile:
+        type: string
+        default: Dockerfile
+      image_name:
+        type: string
+      directory:
+        type: string
+    steps:
+    - run:
+        name: Build << parameters.dockerfile >> docker image
+        command: |
+          cd "<< parameters.directory >>"
+          docker image build . -f "<< parameters.dockerfile >>" --tag "${AWS_ECR_ENDPOINT}/<< parameters.image_name >>:${CIRCLE_SHA1}"
+  ecr-build-ckan-solr:
+    parameters:
+      dockerfile:
+        type: string
+        default: Dockerfile
+      image_name:
+        type: string
+      directory:
+        type: string
+    steps:
+    - run:
+        name: Build << parameters.dockerfile >> docker image
+        command: |
+          cd "<< parameters.directory >>"
+          docker image build . -f "<< parameters.dockerfile >>" --tag "${AWS_ECR_ENDPOINT}/<< parameters.image_name >>:${CIRCLE_SHA1}"
+  ecr-image-push:
+    parameters:
+      image_name:
+        type: string
+    steps:
+    - deploy:
+        name: docker image push
+        command: |
+          docker image push "${AWS_ECR_ENDPOINT}/<< parameters.image_name >>:${CIRCLE_SHA1}"
+          echo "Successfully pushed image: ${AWS_ECR_ENDPOINT}/<< parameters.image_name >>:${CIRCLE_SHA1}"
+          docker image tag \
+            "${AWS_ECR_ENDPOINT}/<< parameters.image_name >>:${CIRCLE_SHA1}" \
+            "${AWS_ECR_ENDPOINT}/<< parameters.image_name >>:${CIRCLE_BRANCH:-${CIRCLE_TAG:-NO_BRANCH_OR_TAG_CONFIGURED_BY_CIRCLE}}"
+          docker image push "${AWS_ECR_ENDPOINT}/<< parameters.image_name >>:${CIRCLE_BRANCH:-${CIRCLE_TAG:-NO_BRANCH_OR_TAG_CONFIGURED_BY_CIRCLE}}"
+          echo "Successfully pushed image: ${AWS_ECR_ENDPOINT}/<< parameters.image_name >>:${CIRCLE_BRANCH:-${CIRCLE_TAG:-NO_BRANCH_OR_TAG_CONFIGURED_BY_CIRCLE}}"
+  terraform-install:
+    steps:
+      - terraform/install:
+          terraform_version: 1.0.9
+  terraform-format:
+    parameters:
+      folder:
+        type: string
+        description: A relative path from the project root in which to perform terrafrom fmt
+    steps:
+      - deploy:
+          name: Terraform Format Check
           command: |
-            pip install awscli
-  dockerbuild:
+            throw_error() {
+              echo $1
+              return 1
+            }
+            cd << parameters.folder >> || throw_error "FATAL: command 'cd << parameters.folder >>' has failed"
+            terraform fmt -check -recursive
+  terraform-init:
     parameters:
-      container:
+      folder:
         type: string
+        description: A relative path from the project root in which to perform terrafrom init
     steps:
-      - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
       - deploy:
-          name: Build << parameters.container >> container
+          name: Terraform Init
           command: |
-            cd << parameters.container >>
-            docker image build -t << parameters.container >> .
-      - cache_save:
-          container: << parameters.container >>
-  dockertag:
+            throw_error() {
+              echo $1
+              return 1
+            }
+            cd << parameters.folder >> || throw_error  "FATAL: command 'cd << parameters.folder >>' has failed"
+            terraform -version || throw_error "FATAL: command 'terraform -version' has failed"
+            terraform init -input=false || throw_error "FATAL: command 'terraform init -input-false' has failed"
+            echo "image_tag = \"$CIRCLE_SHA1\"" >> ./build.auto.tfvars
+  terraform-plan:
     parameters:
-      container:
+      folder:
         type: string
+        description: A relative path from the project root in which to perform terrafrom plan
+      workspace:
+        type: string
+        description: A workspace in which to perform terraform plan
     steps:
       - deploy:
-          name: Tag << parameters.container >> container
-          command: docker tag << parameters.container >> ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/<< parameters.container >>:latest
-  dockerpush:
-    parameters:
-      container:
-        type: string
-    steps:
-      - deploy:
-          name: Push << parameters.container >> container to ECR
-          command: docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/<< parameters.container >>:latest
-  snykinstall:
-    steps:
-      - run:
-          name: Install snyk
-          command: sudo npm install -g snyk
-  snykscan:
-    parameters:
-      container:
-        type: string
-    steps:
-      - checkout
-      - setup_remote_docker
-      - snykinstall
-      - cache_restore:
-          container: << parameters.container >>
-      - deploy:
-          name: Snyk scan << parameters.container >> container
-          command: snyk test --docker << parameters.container >>:latest --file=<< parameters.container >>/Dockerfile --exclude-base-image-vulns || true
-  cache_restore:
-    parameters:
-      container:
-        type: string
-      fail_forward:
-        type: boolean
-        default: true
-    steps:
-      - restore_cache:
-          keys:
-            - v1-<< parameters.container >>-{{ .Branch }}
-          paths:
-            - /tmp/caches/<< parameters.container >>.tar
-      - run:
-          name: Load Docker image layer cache
+          name: Terraform Plan
           command: |
-            set +o pipefail
-            docker load -i /tmp/caches/<< parameters.container >>.tar || << parameters.fail_forward >>
-  cache_save:
+            throw_error() {
+              echo $1
+              return 1
+            }
+            cd << parameters.folder >> || throw_error "FATAL: command 'cd << parameters.folder >>' has failed"
+            terraform workspace select << parameters.workspace >> || throw_error "FATAL: command 'terraform workspace select << parameters.workspace >>' has failed"
+            terraform plan -var image_tag=${CIRCLE_TAG} -out=<< parameters.workspace >>.tfplan -input=false || throw_error "FATAL: command 'terraform plan -out=<< parameters.workspace >>.tfplan -input=false' has failed"
+  terraform-apply:
     parameters:
-      container:
+      folder:
         type: string
-    steps:
-      - run:
-          name: Save Docker image layer cache
-          command: |
-            mkdir -p /tmp/caches
-            docker save -o /tmp/caches/<< parameters.container >>.tar << parameters.container >>
-      - save_cache:
-          key: v1-<< parameters.container >>-{{ .Branch }}-{{ epoch }}
-          paths:
-            - /tmp/caches/<< parameters.container >>.tar
-  ecr_login:
+        description: A relative path from the project root in which to perform terrafrom apply
+      workspace:
+        type: string
+        description: A workspace in which to perform terraform apply
     steps:
       - deploy:
-          name: ECR login
-          command: $(aws ecr get-login --no-include-email --region ${AWS_DEFAULT_REGION})
-  ecr_upload:
-    parameters:
-      container:
-        type: string
-    steps:
-      - checkout
-      - setup_remote_docker
-      - install-aws
-      - cache_restore:
-          container: << parameters.container >>
-      - dockertag:
-          container: << parameters.container >>
-      - ecr_login
-      - dockerpush:
-          container: << parameters.container >>
-
+          name: Terraform Apply
+          command: |
+            throw_error() {
+              echo $1
+              return 1
+            }
+            cd << parameters.folder >> || ( echo "directory << parameters.folder >> does not exist"; exit 1 )
+            terraform workspace select << parameters.workspace >> || ( echo "terraform workspace select << parameters.workspace >> has failed"; exit 1 )
+            terraform apply -input=false << parameters.workspace >>.tfplan || ( echo "terraform apply has failed"; exit 1 )
 
 jobs:
-  docker-build:
-    parameters:
-      container:
-        type: string
-    executor: default
+  test-terraform-format:
+    executor: base
     steps:
-      - dockerbuild:
-          container: << parameters.container >>
-  snyk-scan:
+      - checkout
+      - terraform-install
+      - terraform-format:
+          folder: terraform/applications
+  test-terraform-plan:
+    executor: base
     parameters:
-      container:
+      workspace:
         type: string
-    executor: default
+        description: A terraform workspace name
     steps:
-      - snykscan:
-          container: << parameters.container >>
-  upload-to-ecr:
+      - checkout
+      - aws-init
+      - terraform-install
+      - terraform-init:
+          folder: terraform/applications
+      - terraform-plan:
+          folder: terraform/applications
+          workspace: << parameters.workspace >>
+  test-ckan-build:
+    executor: circle-machine
+    steps:
+      - checkout
+      - run:
+          name: aws-env
+          command: |
+            echo 'AWS_ECR_ENDPOINT="ecr-temp"' >> $BASH_ENV
+      - ecr-build-ckan:
+          directory: ckan
+          image_name: ckan
+  test-ckan-datapusher-build:
+    executor: circle-machine
+    steps:
+      - checkout
+      - run:
+          name: aws-env
+          command: |
+            echo 'AWS_ECR_ENDPOINT="ecr-temp"' >> $BASH_ENV
+      - ecr-build-ckan-datapusher:
+          directory: ckan-datapusher
+          image_name: ckan-datapusher
+  test-ckan-solr-build:
+    executor: circle-machine
+    steps:
+      - checkout
+      - run:
+          name: aws-env
+          command: |
+            echo 'AWS_ECR_ENDPOINT="ecr-temp"' >> $BASH_ENV
+      - ecr-build-ckan-solr:
+          directory: ckan-solr
+          image_name: ckan-solr
+  ckan-build-push:
+    executor: circle-machine
+    steps:
+      - checkout
+      - aws-init
+      - ecr-login
+      - ecr-build-ckan:
+          directory: ckan
+          image_name: ckan
+      - ecr-image-push:
+          image_name: ckan
+  ckan-datapusher-build-push:
+    executor: circle-machine
+    steps:
+      - checkout
+      - aws-init
+      - ecr-login
+      - ecr-build-ckan-datapusher:
+          directory: ckan-datapusher
+          image_name: ckan-datapusher
+      - ecr-image-push:
+          image_name: ckan-datapusher
+  ckan-solr-build-push:
+    executor: circle-machine
+    steps:
+      - checkout
+      - aws-init
+      - ecr-login
+      - ecr-build-ckan-solr:
+          directory: ckan-solr
+          image_name: ckan-solr
+      - ecr-image-push:
+          image_name: ckan-solr
+  ckan-deploy-services:
+    executor: base
     parameters:
-      container:
+      workspace:
         type: string
-    executor: python
+        description: A terraform workspace name
     steps:
-      - ecr_upload:
-          container: << parameters.container >>
-
+      - checkout
+      - aws-init
+      - terraform-install
+      - terraform-init:
+          folder: terraform/applications
+      - terraform-plan:
+          folder: terraform/applications
+          workspace: << parameters.workspace >>
+      - terraform-apply:
+          folder: terraform/applications
+          workspace: << parameters.workspace >>
 
 workflows:
   version: 2
-  docker:
+  tests:
     jobs:
-      # CKAN
-      - docker-build:
-          name: Docker Build CKAN
-          container: ckan
-      - snyk-scan:
-          name: Snyk Scan CKAN
-          context: snyk
-          container: ckan
-          requires: [Docker Build CKAN]
-      - upload-to-ecr:
-          name: Upload to ECR CKAN
-          context: sba-gov-upper
-          container: ckan
-          requires: [Docker Build CKAN, Docker Build Solr, Docker Build Datapusher]
-          filters:
-            branches:
-              only: master
-      # Solr
-      - docker-build:
-          name: Docker Build Solr
-          container: ckan-solr
-      - snyk-scan:
-          name: Snyk Scan Solr
-          context: snyk
-          container: ckan-solr
-          requires: [Docker Build Solr]
-      - upload-to-ecr:
-          name: Upload to ECR Solr
-          context: sba-gov-upper
-          container: ckan-solr
-          requires: [Docker Build CKAN, Docker Build Solr, Docker Build Datapusher]
-          filters:
-            branches:
-              only: master
-      # Datapusher
-      - docker-build:
-          name: Docker Build Datapusher
-          container: ckan-datapusher
-      - snyk-scan:
-          name: Snyk Scan Datapusher
-          context: snyk
-          container: ckan-datapusher
-          requires: [Docker Build Datapusher]
-      - upload-to-ecr:
-          name: Upload to ECR Datapusher
-          context: sba-gov-upper
-          container: ckan-datapusher
-          requires: [Docker Build CKAN, Docker Build Solr, Docker Build Datapusher]
-          filters:
-            branches:
-              only: master
+    - test-terraform-format
+    - test-ckan-build
+    - test-ckan-datapusher-build
+    - test-ckan-solr-build
+  deploy:
+    jobs:
+    - ckan-build-push:
+        name: ckan-build-push
+        context: sba-gov-upper
+        filters:
+          branches:
+            ignore:
+            - /.*/
+          tags:
+            only:
+            - /rc-v[0-9]+(\.[0-9]+)*$/
+            - /v[0-9]+(\.[0-9]+)*$/
+    - ckan-datapusher-build-push:
+        name: ckan-datapusher-build-push
+        context: sba-gov-upper
+        filters:
+          branches:
+            ignore:
+            - /.*/
+          tags:
+            only:
+            - /rc-v[0-9]+(\.[0-9]+)*$/
+            - /v[0-9]+(\.[0-9]+)*$/
+    - ckan-solr-build-push:
+        name: ckan-solr-build-push
+        context: sba-gov-upper
+        filters:
+          branches:
+            ignore:
+            - /.*/
+          tags:
+            only:
+            - /rc-v[0-9]+(\.[0-9]+)*$/
+            - /v[0-9]+(\.[0-9]+)*$/
+    - test-terraform-plan:
+        name: test-terraform-plan-stg
+        context: sba-gov-upper
+        workspace: staging
+        requires:
+        - ckan-build-push
+        - ckan-datapusher-build-push
+        - ckan-solr-build-push
+        filters:
+          branches:
+            ignore:
+            - /.*/
+          tags:
+            only:
+            - /rc-v[0-9]+(\.[0-9]+)*$/
+    - ckan-deploy-services:
+        name: ckan-deploy-services-stg
+        context: sba-gov-upper
+        workspace: staging
+        requires:
+          - test-terraform-plan-stg
+        filters:
+          branches:
+            ignore:
+            - /.*/
+          tags:
+            only:
+            - /rc-v[0-9]+(\.[0-9]+)*$/
+    - test-terraform-plan:
+        name: test-terraform-plan-prod
+        context: sba-gov-upper
+        workspace: production
+        requires:
+        - ckan-build-push
+        - ckan-datapusher-build-push
+        - ckan-solr-build-push
+        filters:
+          branches:
+            ignore:
+            - /.*/
+          tags:
+            only:
+            - /v[0-9]+(\.[0-9]+)*$/
+    - ckan-deploy-services:
+        name: ckan-deploy-services-prod
+        context: sba-gov-upper
+        workspace: production
+        requires:
+        - test-terraform-plan-prod
+        filters:
+          branches:
+            ignore:
+            - /.*/
+          tags:
+            only:
+            - /v[0-9]+(\.[0-9]+)*$/
