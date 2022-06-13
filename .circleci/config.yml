@@ -237,6 +237,8 @@ jobs:
           image_name: ckan
       - snyk/scan:
           token-variable: SNYK_TOKEN
+          severity-threshold: high
+          target-file: ckan/Dockerfile
   test-ckan-datapusher-build:
     executor: circle-machine
     steps:
