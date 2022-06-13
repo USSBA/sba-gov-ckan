@@ -14,7 +14,9 @@ executors:
   base:
     docker:
     - image: cimg/base:2020.12
-
+  node:
+    docker:
+    - image: cimg/node:lts
 commands:
   build-containers:
     steps:
@@ -231,6 +233,11 @@ jobs:
       - terraform-plan:
           folder: terraform/applications
           workspace: << parameters.workspace >>
+  snyk-scan:
+    executor: node
+    steps:
+      - checkout
+      - synk-scan
   test-ckan-build:
     executor: circle-machine
     steps:
@@ -242,10 +249,6 @@ jobs:
       - ecr-build-ckan:
           directory: ckan
           image_name: ckan
-      - synk-scan:
-          build:
-            docker:
-              - image: cimg/node:lts
 #      - snyk/scan:
 #          token-variable: SNYK_TOKEN
 #          severity-threshold: high
@@ -334,6 +337,7 @@ workflows:
         context: sba-gov-upper
     - test-ckan-datapusher-build
     - test-ckan-solr-build
+    - snyk-scan
   deploy:
     jobs:
     - ckan-build-push:
