@@ -3,6 +3,7 @@ version: 2.1
 orbs:
   aws-cli: circleci/aws-cli@1
   terraform: circleci/terraform@2
+  snyk: snyk/snyk@1.1.2
 
 executors:
   circle-machine:
@@ -234,6 +235,7 @@ jobs:
       - ecr-build-ckan:
           directory: ckan
           image_name: ckan
+      - snyk/scan
   test-ckan-datapusher-build:
     executor: circle-machine
     steps:
