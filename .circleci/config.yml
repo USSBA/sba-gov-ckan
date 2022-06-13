@@ -75,7 +75,7 @@ commands:
         command: |
           npm install snyk --location=global
           snyk auth ${SNYK_TOKEN}
-          snyk test --json ionic
+          snyk test --severity-threshold=high --json ionic
   ecr-build-ckan:
     parameters:
       dockerfile:
