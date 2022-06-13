@@ -3,7 +3,7 @@ version: 2.1
 orbs:
   aws-cli: circleci/aws-cli@1
   terraform: circleci/terraform@2
-  snyk: snyk/snyk@1.1.2
+#  snyk: snyk/snyk@1.1.2
 
 executors:
   circle-machine:
@@ -66,6 +66,13 @@ commands:
             echo "Can't detect the version of awscli being used..."
             exit 1
           fi
+  synk-scan:
+    steps:
+    - run:
+        name: snyk scan
+        command: |
+          npm install snyk -g
+          snyk test ionic
   ecr-build-ckan:
     parameters:
       dockerfile:
@@ -235,11 +242,15 @@ jobs:
       - ecr-build-ckan:
           directory: ckan
           image_name: ckan
-      - snyk/scan:
-          token-variable: SNYK_TOKEN
-          severity-threshold: high
-          docker-image-name: ecr-temp/ckan:${CIRCLE_SHA1}
-          #target-file: ckan/Dockerfile
+      - synk-scan:
+          build:
+            docker:
+              - image: cimg/node:lts
+#      - snyk/scan:
+#          token-variable: SNYK_TOKEN
+#          severity-threshold: high
+#          docker-image-name: ecr-temp/ckan:${CIRCLE_SHA1}
+#          target-file: ckan/Dockerfile
   test-ckan-datapusher-build:
     executor: circle-machine
     steps:
