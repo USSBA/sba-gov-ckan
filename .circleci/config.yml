@@ -235,7 +235,8 @@ jobs:
       - ecr-build-ckan:
           directory: ckan
           image_name: ckan
-      - snyk/scan
+      - snyk/scan:
+          token-variable: ${SNYK_TOKEN}
   test-ckan-datapusher-build:
     executor: circle-machine
     steps:
@@ -315,7 +316,8 @@ workflows:
   tests:
     jobs:
     - test-terraform-format
-    - test-ckan-build
+    - test-ckan-build:
+        context: sba-gov-upper
     - test-ckan-datapusher-build
     - test-ckan-solr-build
   deploy:
