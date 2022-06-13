@@ -238,7 +238,8 @@ jobs:
       - snyk/scan:
           token-variable: SNYK_TOKEN
           severity-threshold: high
-          target-file: ckan/Dockerfile
+          docker-image-name: ecr-temp/ckan:${CIRCLE_SHA1}
+          #target-file: ckan/Dockerfile
   test-ckan-datapusher-build:
     executor: circle-machine
     steps:
