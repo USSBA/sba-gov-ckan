@@ -73,7 +73,8 @@ commands:
     - run:
         name: snyk scan
         command: |
-          npm install snyk -g
+          npm install snyk --location=global
+          snyk auth ${SNYK_TOKEN}
           snyk test ionic
   ecr-build-ckan:
     parameters:
@@ -337,7 +338,8 @@ workflows:
         context: sba-gov-upper
     - test-ckan-datapusher-build
     - test-ckan-solr-build
-    - snyk-scan
+    - snyk-scan:
+        context: sba-gov-upper
   deploy:
     jobs:
     - ckan-build-push:
