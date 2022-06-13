@@ -237,7 +237,6 @@ jobs:
           image_name: ckan
       - snyk/scan:
           token-variable: SNYK_TOKEN
-          type: env_var_name
   test-ckan-datapusher-build:
     executor: circle-machine
     steps:
