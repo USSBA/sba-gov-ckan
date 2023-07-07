@@ -1,6 +1,6 @@
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 3.0"
+  version = "~> 4.0"
 
   # general settings
   azs                  = local.env.zones
@@ -10,8 +10,15 @@ module "vpc" {
   enable_dns_support   = true
 
   # network address translation settings
-  enable_nat_gateway = true
-  single_nat_gateway = local.env.single_nat_gateway
+  enable_nat_gateway      = true
+  single_nat_gateway      = local.env.single_nat_gateway
+  map_public_ip_on_launch = true
+
+  # disable default vpc management
+  manage_default_network_acl    = false
+  manage_default_route_table    = false
+  manage_default_security_group = false
+  manage_default_vpc            = false
 
   # public subnets & acl rules
   public_dedicated_network_acl = true

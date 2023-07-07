@@ -71,9 +71,9 @@ resource "aws_cloudfront_distribution" "distribution" {
   }
 
   logging_config {
-    bucket          = aws_s3_bucket.cloudfront_logs.bucket_domain_name
+    bucket          = "${local.account_id}-${local.region}-logs.s3.amazonaws.com"
     include_cookies = true
-    prefix          = "cloudfront/"
+    prefix          = "cloudfront/ckan/${terraform.workspace}"
   }
 
   ordered_cache_behavior {
@@ -586,6 +586,8 @@ resource "aws_cloudfront_distribution" "distribution" {
   }
 }
 
+# TODO:
+# This bucket needs to be removed from the state and manually deleted from the GUI so it can be emptied.
 resource "aws_s3_bucket" "cloudfront_logs" {
   bucket = "${local.env.domain_name}-${local.env.name}-cloudfront-logs"
 
