@@ -1,12 +1,16 @@
 module "ckan_solr" {
   source  = "USSBA/easy-fargate-service/aws"
-  version = "~> 7.0"
-  #source     = "../../../terraform-aws-easy-fargate-service"
+  version = "~> 9.3"
+
   depends_on = [module.efs]
 
-  # logging
+  # cloud watch logging
   log_group_name              = "/ecs/${local.env.name}/solr"
   log_group_retention_in_days = 90
+
+  # application load-balancer access logs
+  alb_log_bucket_name = "${local.account_id}-${local.region}-logs"
+  alb_log_prefix      = "alb/ckan-solr/${terraform.workspace}"
 
   # task
   family      = "${local.env.name}-solr"
