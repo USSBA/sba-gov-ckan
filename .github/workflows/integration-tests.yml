@@ -37,9 +37,37 @@ jobs:
           image: 'ckan-datapusher'
           push-to-ecr: false
 
-      - name: 'Docker Image Build (sbir-website-fpm)'
+      - name: 'Docker Image Build CKAN Solr'
         uses: './.github/actions/ecr'
         with:
           dockerfile: 'ckan-solr/Dockerfile'
           image: 'ckan-solr'
           push-to-ecr: false
+
+  terraform:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: 'Checkout'
+        uses: 'actions/checkout@v3'
+
+      - name: 'Install Terraform 1.0.9'
+        uses: 'hashicorp/setup-terraform@v2'
+        with:
+          terraform_version: '1.0.9'
+
+      - name: 'Terraform Format'
+        run: |
+          cd terraform/
+          terraform fmt -check -recursive
+
+      # To run a terrafrom validate the project must be initialized, but we cannot use AWS credentials for integraton tests.
+      # Remove the s3-backend.tf so that the project state will be initialized on the local container.
+      - name: 'Terraform Validate'
+        run: |
+          cd terraform/applications
+          rm s3-backend.tf
+          terraform init -input=false
+          terraform workspace new staging
+          terraform validate
+          terraform workspace new production
+          terraform validate

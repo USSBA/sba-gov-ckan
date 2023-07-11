@@ -1,0 +1,35 @@
+name: Terraform Deploy
+description: Apply terraform in a target folder and workspace
+
+inputs:
+  folder:
+    description: Directory containing the Terraform files used in the deployment
+    required: true
+  datapusher_image_tag:
+    description: CKAN Datapusher image tag
+    required: true
+  image_tag_web:
+    description: CKAN Web image tag
+    required: true
+  image_tag_solr:
+    description: CKAN Solr image tag
+    required: true
+  workspace:
+    description: Terraform workspace to base the deployment
+    required: true
+  region:
+    description: Name of the AWS Region where the service has being deployed
+    required: false
+    default: us-east-1
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        cd ${{ inputs.folder }}
+        terraform init -input=false
+        echo "image = \"${{ inputs.image }}\"" >> ./build.auto.tfvars
+        terraform workspace select ${{ inputs.workspace }}
+        terraform plan -out=${{ inputs.workspace }}.tfplan -input=false -detailed-exitcode && true
+        #terraform apply -input=false ${{ inputs.workspace }}.tfplan

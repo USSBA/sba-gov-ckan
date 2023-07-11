@@ -26,6 +26,6 @@ runs:
         docker image build --cache-from=${{ inputs.image }}:latest . -f `basename ${{ inputs.dockerfile }}` -t ${{ inputs.image }}:latest
         if [[ '${{ inputs.push-to-ecr }}' == 'true' ]]; then
           docker image push ${{ inputs.image }}:latest
-          docker image tag ${{ inputs.image }}:latest ${{ inputs.image }}:${GITHUB_REF}
-          docker image push ${{ inputs.image }}:${GITHUB_REF}
+          docker image tag ${{ inputs.image }}:latest ${{ inputs.image }}:${GITHUB_SHA}
+          docker image push ${{ inputs.image }}:${GITHUB_SHA}
         fi

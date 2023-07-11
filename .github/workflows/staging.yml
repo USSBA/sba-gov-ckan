@@ -1,0 +1,81 @@
+# global configuration for all jobs
+name: Staging
+on:
+  push:
+    branches:
+      - IA-*
+    #tags:
+    #  - rc-v*.*
+
+# sets the default shell for all jobs
+defaults:
+  run:
+    shell: bash
+
+# permissions can be set globally for jobs
+permissions:
+  contents: read # contents is used for checking out code
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.OIDC_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: ECR Login
+        uses: aws-actions/amazon-ecr-login@v1
+        id: ecr-login
+
+      - name: ECR Build & Push CKAN
+        uses: ./.github/actions/ecr
+        with:
+          dockerfile: ckan/Dockerfile
+          image: ${{ steps.ecr-login.outputs.registry }}/ckan
+
+      - name: ECR Build & Push CKAN Datapusher
+        uses: ./.github/actions/ecr
+        with:
+          dockerfile: ckan-datapusher/Dockerfile
+          image: ${{ steps.ecr-login.outputs.registry }}/ckan-datapusher
+
+      - name: ECR Build & Push CKAN Solr
+        uses: ./.github/actions/ecr
+        with:
+          dockerfile: ckan-solr/Dockerfile
+          image: ${{ steps.ecr-login.outputs.registry }}/ckan-solr
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.OIDC_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: ECR Login
+        uses: aws-actions/amazon-ecr-login@v1
+        id: ecr-login
+
+      - name: Terraform Plan & Apply
+        uses: ./.github/actions/terraform
+        with:
+          folder: ./terraform/applications
+          datapusher_image_tag: ${{ github.sha }}
+          image_tag_web: ${{ github.sha }}
+          image_tag_solr: ${{ github.sha }}
+          workspace: staging
