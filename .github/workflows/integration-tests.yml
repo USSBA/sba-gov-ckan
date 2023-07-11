@@ -1,0 +1,45 @@
+name: 'Integration Tests'
+on:
+  push:
+    branches-ignore:
+      - 'master'
+
+# Set the default shell for the build process.
+# https://docs.github.com/en/actions/using-jobs/setting-default-values-for-jobs
+defaults:
+  run:
+    shell: 'bash'
+
+# Set the build pipeline permissions.
+# https://docs.github.com/en/actions/using-jobs/assigning-permissions-to-jobs
+permissions:
+  contents: 'read' # used to checkout code
+  id-token: 'write'
+
+jobs:
+  build-images:
+    runs-on: 'ubuntu-20.04'
+    steps:
+      - name: 'Checkout'
+        uses: 'actions/checkout@v3'
+
+      - name: 'Docker Image Build CKAN'
+        uses: './.github/actions/ecr'
+        with:
+          dockerfile: 'ckan/Dockerfile'
+          image: 'ckan'
+          push-to-ecr: false
+
+      - name: 'Docker Image Build CKAN Datapusher'
+        uses: './.github/actions/ecr'
+        with:
+          dockerfile: 'ckan-datapusher/Dockerfile'
+          image: 'ckan-datapusher'
+          push-to-ecr: false
+
+      - name: 'Docker Image Build (sbir-website-fpm)'
+        uses: './.github/actions/ecr'
+        with:
+          dockerfile: 'ckan-solr/Dockerfile'
+          image: 'ckan-solr'
+          push-to-ecr: false

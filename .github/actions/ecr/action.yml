@@ -1,0 +1,31 @@
+name: 'Build Image'
+description: 'Builds, Tags and Pushes a Docker image to ECR'
+
+inputs:
+  dockerfile:
+    default: 'Dockerfile'
+    description: 'Relative path from the project root to the Dockerfile.'
+    required: false
+
+  image:
+    description: 'ECR image found on the registry.'
+    required: true
+
+  push-to-ecr:
+    default: true
+    description: 'Whether or not the image will be pushed to ECR considering the build was successful.'
+    required: false
+
+runs:
+  using: 'composite'
+  steps:
+    - shell: 'bash'
+      run: |
+        cd `dirname ${{ inputs.dockerfile }}`
+        docker image pull ${{ inputs.image }}:latest || true
+        docker image build --cache-from=${{ inputs.image }}:latest . -f `basename ${{ inputs.dockerfile }}` -t ${{ inputs.image }}:latest
+        if [[ '${{ inputs.push-to-ecr }}' == 'true' ]]; then
+          docker image push ${{ inputs.image }}:latest
+          docker image tag ${{ inputs.image }}:latest ${{ inputs.image }}:${GITHUB_REF}
+          docker image push ${{ inputs.image }}:${GITHUB_REF}
+        fi
