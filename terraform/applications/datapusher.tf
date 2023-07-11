@@ -33,7 +33,7 @@ module "ckan_datapusher" {
     {
       name         = "datapusher"
       portMappings = [{ containerPort = 8800 }]
-      image        = "${local.prefix_ecr}/ckan-datapusher:${local.env.image_tag_datapusher}"
+      image        = "${local.prefix_ecr}/ckan-datapusher:${var.image_tag}"
     }
   ]
 }

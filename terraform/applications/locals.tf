@@ -20,15 +20,12 @@ locals {
   zone_map = { a = 0, b = 1 }
   ckan = {
     default = {
-      name                 = "ckan-${terraform.workspace}"
-      zones                = formatlist("%s%s", local.region, keys(local.zone_map))
-      hosted_zone_id       = "Z34GMHAZJS247A"
-      image_tag_datapusher = var.image_tag
-      image_tag_solr       = var.image_tag
-      image_tag_web        = var.image_tag
-      rds_username         = "ckan_default"
-      rds_database_name    = "ckan_default"
-      rds_instance_class   = "db.t3.micro"
+      name               = "ckan-${terraform.workspace}"
+      zones              = formatlist("%s%s", local.region, keys(local.zone_map))
+      hosted_zone_id     = "Z34GMHAZJS247A"
+      rds_username       = "ckan_default"
+      rds_database_name  = "ckan_default"
+      rds_instance_class = "db.t3.micro"
     }
     staging = {
       single_nat_gateway          = true

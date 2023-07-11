@@ -37,7 +37,7 @@ module "ckan_solr" {
     {
       name         = "solr"
       portMappings = [{ containerPort = 8983 }]
-      image        = "${local.prefix_ecr}/ckan-solr:${local.env.image_tag_solr}"
+      image        = "${local.prefix_ecr}/ckan-solr:${var.image_tag}"
     }
   ]
 
