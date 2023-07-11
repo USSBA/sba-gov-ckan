@@ -56,7 +56,7 @@ module "ckan_web" {
     {
       name         = "web"
       portMappings = [{ containerPort = 80 }]
-      image        = "${local.prefix_ecr}/ckan:${local.env.image_tag_web}"
+      image        = "${local.prefix_ecr}/ckan:${var.image_tag}"
       environment = [
         { name = "CKAN_PORT", value = "80" },
         { name = "CKAN_SITE_URL", value = "https://${local.env.domain_name}" },

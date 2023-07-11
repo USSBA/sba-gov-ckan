@@ -1,9 +1,9 @@
 # global configuration for all jobs
-name: Staging
+name: Production
 on:
   push:
     tags:
-      - rc-v*.*
+      - v*.*
 
 # sets the default shell for all jobs
 defaults:
@@ -18,7 +18,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: staging
+    environment: production
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -54,7 +54,7 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    environment: staging
+    environment: production
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -74,4 +74,4 @@ jobs:
         with:
           folder: ./terraform/applications
           image_tag: ${{ github.ref_name }}
-          workspace: staging
+          workspace: production

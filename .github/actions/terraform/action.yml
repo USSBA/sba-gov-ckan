@@ -5,14 +5,8 @@ inputs:
   folder:
     description: Directory containing the Terraform files used in the deployment
     required: true
-  datapusher_image_tag:
-    description: CKAN Datapusher image tag
-    required: true
-  image_tag_web:
-    description: CKAN Web image tag
-    required: true
-  image_tag_solr:
-    description: CKAN Solr image tag
+  image_tag:
+    description: Image tag used for CKAN Web, CKAN Datapusher & CKAN Solr
     required: true
   workspace:
     description: Terraform workspace to base the deployment
@@ -29,7 +23,7 @@ runs:
       run: |
         cd ${{ inputs.folder }}
         terraform init -input=false
-        echo "image = \"${{ inputs.image }}\"" >> ./build.auto.tfvars
+        echo "image_tag = \"${{ inputs.image_tag }}\"" >> ./build.auto.tfvars
         terraform workspace select ${{ inputs.workspace }}
         terraform plan -out=${{ inputs.workspace }}.tfplan -input=false -detailed-exitcode && true
-        #terraform apply -input=false ${{ inputs.workspace }}.tfplan
+        terraform apply -input=false ${{ inputs.workspace }}.tfplan
