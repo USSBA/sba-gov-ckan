@@ -1,0 +1,58 @@
+### This is a use case example of how we can modify/prime the database with necessary roles, users and databases. Potentially for plugins.
+### TODO: Determine if this script is worth using when CKAN 2.10 gets into AWS or if we want to manually run commands using ServerlessV2 query editor.
+import psycopg2
+import os
+
+db=os.environ['CKAN_DB']
+db_user=os.environ['CKAN_DB_USER']
+db_password=os.environ['CKAN_DB_PASSWORD']
+db_host=os.environ['POSTGRES_HOST']
+
+def test():
+  try:
+    conn=psycopg2.connect(database=f'{db}',host=f'{db_host}',user=f'{db_user}',password=f'{db_password}',port='5432')
+    conn.close()
+    print('Connection to Postgres was successful.')
+  except:
+    print('Connection to Postgres was not successful.')
+
+def create_roles():
+  try:
+    conn=psycopg2.connect(database=f'{db}',host=f'{db_host}',user=f'{db_user}',password=f'{db_password}',port='5432')
+    cur=conn.cursor()
+    cur.execute("SELECT 1 FROM pg_roles WHERE rolname='datastore_ro'")
+    # returns an iterable object
+    role_exists=cur.fetchone()
+    for r in role_exists:
+      # will return 1 if the role is returned and none if it does not exist
+      if r == 1:
+        print('the role datastore_ro already exists, nothing to create.')
+      else:
+        cur.execute("CREATE ROLE datastore_ro NOSUPERUSER NOCREATEDB NOCREATEROLE LOGIN PASSWORD 'datastore'")
+    conn.close()
+  except:
+    print('Unable to execute SELECT query or to CREATE role.')
+
+def create_databases():
+  try:
+    dbs=("ckan_test","datastore","datastore_test")
+    for db in dbs:
+      conn=psycopg2.connect(database=f'{db}',host=f'{db_host}',user=f'{db_user}',password=f'{db_password}',port='5432')
+      cur=conn.cursor()
+      # for string interpolation with psycopg2 please see https://www.psycopg.org/psycopg3/docs/basic/params.html
+      cur.execute("SELECT 1 FROM pg_database WHERE datname=(%s)", (db,))
+      db_exist=cur.fetchone()
+      if db_exist[0] == 1:
+        print(f'The database {db} already exists, nothing to create.')
+      else:
+        print(f'The database {db} does not exist. Creating database {db}.')
+        create_cmd=sql.SQL("CREATE DATABASE (%s) OWNER 'ckan_default' ENCODING 'utf-8'", (db))
+    conn.close()
+  except:
+    print('Unable to execute SELECT query or to CREATE role.')
+
+# main #
+
+test()
+create_roles()
+create_databases()
