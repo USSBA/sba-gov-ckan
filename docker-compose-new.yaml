@@ -30,7 +30,7 @@ services:
       vpc:
         ipv4_address: 10.10.0.2
     env_file:
-      - .env
+      - .env.local
     #volumes:
     #- ckan:/var/lib/ckan/
     ## AWS Configuration: uncomment this line and ensure you have your AWS credentials configured in your local ~/.aws directory
