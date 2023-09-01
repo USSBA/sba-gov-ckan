@@ -1,4 +1,4 @@
-version: '3'
+version: '3.3'
 
 volumes:
   ckan:
@@ -17,22 +17,39 @@ services:
   ckan:
     container_name: ckan
     image: ckan
-    depends_on:
-    - postgres
     build:
       context: ./ckan/
-      dockerfile: Dockerfile
     expose:
-    - 5000
+    - 80
     ports:
-    - 5000:5000
+    - 80:80
     networks:
       vpc:
         ipv4_address: 10.10.0.2
-    env_file:
-      - .env.local
-    #volumes:
-    #- ckan:/var/lib/ckan/
+    environment:
+    # Environment Specific
+    - CKAN_PORT=80
+    - POSTGRES_FQDN=postgres
+    - REDIS_FQDN=redis
+    - SOLR_FQDN=solr
+    - DATAPUSHER_FQDN=datapusher
+    - CKAN_SITE_URL=http://sba.ckan.com
+    - CKAN_DATAPUSHER_CALLBACK_URL=http://sba.ckan.com
+    - CKAN_SMTP_ERROR_MAIL_TO=devops@sba.ckan.com
+    - CKAN_SMTP_ERROR_MAIL_FROM=errors@sba.ckan.com
+    - CKAN_SMTP_MAIL_FROM=admin@sba.ckan.com
+    - SMTP_FQDN=smtp
+    - SMTP_PORT=1025
+    # Secrets
+    - APP_UUID=AAAAAAAA-0000-1111-2222-BBBBBBBBBBBB
+    - CKAN_API_TOKEN_SECRET=9OzsqKgYG4o_-6RGZ14ebdsh6
+    #- CKAN_GOOGLE_ANALYTICS_ID=UA-000000-1
+    - CKAN_SMTP_PASSWORD=fake
+    - CKAN_SMTP_USER=fake
+    - POSTGRES_PASSWORD=fearless
+    - SESSION_SECRET=AAAAAAAAAAAAAAAAAAAAAAAAA
+    volumes:
+    - ckan:/var/lib/ckan/
     ## AWS Configuration: uncomment this line and ensure you have your AWS credentials configured in your local ~/.aws directory
     #- ~/.aws/:/root/.aws/
 
@@ -53,8 +70,7 @@ services:
 
   postgres:
     container_name: postgres
-    image: postgres:12.0-alpine
-    #image: postgres:11.1
+    image: postgres:11.1
     environment:
     - POSTGRES_PASSWORD=fearless
     - POSTGRES_USER=ckan_default
@@ -65,8 +81,7 @@ services:
       vpc:
         ipv4_address: 10.10.0.4
     volumes:
-    - ./postgres/scripts:/docker-entrypoint-initdb.d/
-    #- postgres:/var/lib/postgresql/data/
+    - postgres:/var/lib/postgresql/data/
 
   solr:
     container_name: solr

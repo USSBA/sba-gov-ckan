@@ -120,7 +120,7 @@ To explain why this is necessary please understand that in a production setting 
 This docker-compose solution uses a custom `bridge` network where each service is assigned a static IPv4 address.  This way we can use the `extra_hosts` option of the **DataPusher** service to map `sba.ckan.com` to the static IPv4 address assigned to **CKAN** allowing it to resolve both on your local machine and by the **DataPusher** virtual machine.
 
 
-### Using docker-compose to run the solution locally
+### Using docker-compose to run the solution locally **CKAN2.10**
 
 * Open a command line shell
 * Run `docker-compose build` to build all images in the solution
@@ -143,6 +143,14 @@ This docker-compose solution uses a custom `bridge` network where each service i
   * `docker-compose down` to remove all contaienrs and networks
   * `docker-compose down -v` to remove all containers, volumes, and networks
   * `docker-compose down -v --rmi all` to remove all containers, volumes, and networks and images
+
+### Using docker-compose to stop and cleanup locally
+
+* Open a command line shell
+* Run:
+  * `docker compose -f docker-compose-new.yaml down` to remove all containers and networks
+  * `docker-compose -f docker-compose-new.yaml down -v` to remove all containers, volumes, and networks
+  * `docker-compose -f docker-compose-new.yaml down -v --rmi all` to remove all containers, volumes, and networks and images
 
 ## Build and Deployment Pipeline
 
