@@ -21,7 +21,7 @@ services:
     - postgres
     build:
       context: ./ckan/
-      dockerfile: Dockerfile.new
+      dockerfile: Dockerfile
     expose:
     - 5000
     ports:
