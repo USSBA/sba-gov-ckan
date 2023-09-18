@@ -20,17 +20,21 @@ locals {
   zone_map = { a = 0, b = 1 }
   ckan = {
     default = {
-      name               = "ckan-${terraform.workspace}"
-      zones              = formatlist("%s%s", local.region, keys(local.zone_map))
-      hosted_zone_id     = "Z34GMHAZJS247A"
+      name  = "ckan-${terraform.workspace}"
+      zones = formatlist("%s%s", local.region, keys(local.zone_map))
+      #TODO: Remove once CKAN migration is complete. Leaving behind for easy toggle in case CKAN modifications must be made in sba.gov
+      # sba.gov zone: "Z34GMHAZJS247A"
+      hosted_zone_id     = "Z1043853321RLHLEHIM4V"
       rds_username       = "ckan_default"
       rds_database_name  = "ckan_default"
       rds_instance_class = "db.t3.micro"
     }
     staging = {
-      single_nat_gateway          = true
-      cidr                        = "10.250.0.0/16"
-      domain_name                 = "data.staging.sba.gov"
+      single_nat_gateway = true
+      cidr               = "10.250.0.0/16"
+      #TODO: Remove once CKAN migration is complete. Leaving behind for easy toggle in case CKAN modifications must be made in sba.gov
+      # sba.gov domain: "data.staging.sba.gov"
+      domain_name                 = "staging.ckan.ussba.io"
       desired_capacity_ckan       = 1
       desired_capacity_datapusher = 1
       desired_capacity_solr       = 1 # never exceed 1 for solr
@@ -58,6 +62,7 @@ locals {
   fqdn_redis      = "redis.${local.env.domain_name}"
   fqdn_solr       = "solr.${local.env.domain_name}"
   fqdn_web        = "web.${local.env.domain_name}"
+  fqdn_data       = "data.${local.env.domain_name}"
 }
 
 
@@ -75,14 +80,21 @@ data "aws_ssm_parameter" "session_secret" {
   name = "/ckan/${terraform.workspace}/session_secret"
 }
 data "aws_ssm_parameter" "db_password" {
-  name = "/ckan/${terraform.workspace}/db_password/postgres"
+  name = "/ckan/${terraform.workspace}/rds/pass"
 }
-data "aws_ssm_parameter" "ses_user" {
-  name = "SES_USER"
+data "aws_ssm_parameter" "sysadmin_pass" {
+  name = "/ckan/${terraform.workspace}/sysadmin/pass"
 }
-data "aws_ssm_parameter" "ses_password" {
-  name = "SES_PASSWORD"
+data "aws_ssm_parameter" "datapusher_api_token" {
+  name = "/ckan/${terraform.workspace}/datapusher/api_token"
 }
+# SMTP will be reconfigured in a future sprint
+#data "aws_ssm_parameter" "ses_user" {
+#  name = "SES_USER"
+#}
+#data "aws_ssm_parameter" "ses_password" {
+#  name = "SES_PASSWORD"
+#}
 data "aws_acm_certificate" "ssl" {
   domain   = local.env.domain_name
   statuses = ["ISSUED"]

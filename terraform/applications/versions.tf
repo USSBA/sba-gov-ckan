@@ -9,5 +9,5 @@ terraform {
 }
 provider "aws" {
   region              = "us-east-1"
-  allowed_account_ids = ["230968663929"]
+  allowed_account_ids = ["898673322888"]
 }

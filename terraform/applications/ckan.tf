@@ -1,3 +1,4 @@
+
 locals {
   secrets = {
     default = [
@@ -5,8 +6,10 @@ locals {
       { name = "APP_UUID", valueFrom = data.aws_ssm_parameter.app_uuid.arn },
       { name = "CKAN_API_TOKEN_SECRET", valueFrom = data.aws_ssm_parameter.api_token.arn },
       { name = "POSTGRES_PASSWORD", valueFrom = data.aws_ssm_parameter.db_password.arn },
-      { name = "CKAN_SMTP_USER", valueFrom = data.aws_ssm_parameter.ses_user.arn },
-      { name = "CKAN_SMTP_PASSWORD", valueFrom = data.aws_ssm_parameter.ses_password.arn },
+      { name = "CKAN_SYSADMIN_PASSWORD", valueFrom = data.aws_ssm_parameter.sysadmin_pass.arn },
+      { name = "CKAN_DATAPUSHER_API_TOKEN", valueFrom = data.aws_ssm_parameter.datapusher_api_token.arn },
+      #      { name = "CKAN_SMTP_USER", valueFrom = data.aws_ssm_parameter.ses_user.arn },
+      #      { name = "CKAN_SMTP_PASSWORD", valueFrom = data.aws_ssm_parameter.ses_password.arn },
     ]
     staging    = []
     production = [{ name = "CKAN_GOOGLE_ANALYTICS_ID", valueFrom = data.aws_ssm_parameter.google_analytics_id.arn }]
@@ -51,24 +54,50 @@ module "ckan_web" {
 
   # container(s)
   cluster_name   = aws_ecs_cluster.ckan.name
-  container_port = 80
+  container_port = 5000
   container_definitions = [
     {
       name         = "web"
-      portMappings = [{ containerPort = 80 }]
+      portMappings = [{ containerPort = 5000 }]
       image        = "${local.prefix_ecr}/ckan:${var.image_tag}"
       environment = [
-        { name = "CKAN_PORT", value = "80" },
-        { name = "CKAN_SITE_URL", value = "https://${local.env.domain_name}" },
+        # CKAN Defaults
+        { name = "CKAN_VERSION", value = "2.10.0" },
+        { name = "CKAN_SITE_ID", value = "default" },
+        { name = "CKAN_STORAGE_PATH", value = "/var/lib/ckan/default" },
+        { name = "CKAN___BEAKER__SESSION__SECRET", value = "CHANGE_ME" },
+        { name = "CKAN___API_TOKEN__JWT__ENCODE__SECRE", value = "string:CHANGE_ME" },
+        { name = "CKAN___API_TOKEN__JWT__DECODE__SECRET=", value = "string:CHANGE_ME" },
+        { name = "CKAN__AUTH__CREATE_USER_VIA_API", value = "false" },
+        { name = "CKAN__AUTH__CREATE_USER_VIA_WEB", value = "false" },
+        # Domains & FQDN'S
+        { name = "CKAN_SITE_URL", value = "https://data.${local.env.domain_name}" },
+        { name = "CKAN_SOLR_URL", value = "http://${local.fqdn_solr}:8983/solr/ckan" },
+        { name = "CKAN_DATAPUSHER_URL", value = "http://${local.fqdn_datapusher}:8800" },
         { name = "CKAN_DATAPUSHER_CALLBACK_URL", value = "https://${local.fqdn_web}" },
-        { name = "POSTGRES_FQDN", value = local.fqdn_postgres },
-        { name = "REDIS_FQDN", value = local.fqdn_redis },
-        { name = "SOLR_PORT", value = "8983" },
-        { name = "SOLR_FQDN", value = local.fqdn_solr },
-        { name = "DATAPUSHER_PORT", value = "8800" },
+        { name = "CKAN_REDIS_URL", value = "redis://${local.fqdn_redis}:6379/1" },
         { name = "DATAPUSHER_FQDN", value = local.fqdn_datapusher },
+        { name = "REDIS_FQDN", value = local.fqdn_redis },
+        { name = "SOLR_FQDN", value = local.fqdn_solr },
+        # Ports
+        { name = "CKAN_PORT", value = "5000" },
+        { name = "DATAPUSHER_PORT", value = "8800" },
+        { name = "SOLR_PORT", value = "8983" },
+        # Database credentials & Configuration
+        { name = "DATASTORE_READONLY_USER", value = "datastore_ro" },
+        { name = "DATASTORE_READONLY_PASSWORD", value = "datastore" },
+        { name = "DATASTORE_DB", value = "datastore" },
+        { name = "POSTGRES_HOST", value = local.fqdn_postgres },
+        { name = "POSTGRES_USER", value = "ckan_default" },
+        { name = "POSTGRES_DB", value = "ckan_default" },
+        { name = "POSTGRES_FQDN", value = local.fqdn_postgres },
+        # SMTP Configuration
+        # SMTP will be reconfigured in a future sprint
+        { name = "CKAN_SYSADMIN_NAME", value = "ckan_admin" },
+        { name = "CKAN_SYSADMIN_EMAIL", value = "your_email@example.com" },
+        { name = "CKAN_SMTP_SERVER", value = "smtp.corporateict.domain:25" },
+        { name = "CKAN_SMTP_STARTTLS", value = "True" },
         { name = "CKAN_SMTP_MAIL_FROM", value = "websupport@sba.gov" },
-
       ]
       secrets = local.ckan_secrets
     }
@@ -78,7 +107,7 @@ module "ckan_web" {
   efs_configs = [
     {
       container_name = "web"
-      container_path = "/var/lib/ckan"
+      container_path = "/var/lib/ckan/default"
       file_system_id = module.efs["web"].id
       root_directory = "/"
     }

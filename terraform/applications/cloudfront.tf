@@ -19,7 +19,7 @@ data "aws_cloudfront_origin_request_policy" "all_viewer" {
 #}
 
 resource "aws_cloudfront_distribution" "distribution" {
-  aliases          = [local.env.domain_name]
+  aliases          = [local.fqdn_data]
   comment          = "CKAN ${title(terraform.workspace)}"
   enabled          = true
   http_version     = "http2"
@@ -587,13 +587,13 @@ resource "aws_cloudfront_distribution" "distribution" {
 }
 
 # TODO:
-# This bucket needs to be removed from the state and manually deleted from the GUI so it can be emptied.
-resource "aws_s3_bucket" "cloudfront_logs" {
-  bucket = "${local.env.domain_name}-${local.env.name}-cloudfront-logs"
-
-  lifecycle {
-    ignore_changes = [
-      grant, # Managed by CloudFront; ignore the changes
-    ]
-  }
-}
+# This bucket needs to be removed from the state. After CKAN 2.10 is operational in staging & production this will be cleaned up.
+#resource "aws_s3_bucket" "cloudfront_logs" {
+#  bucket = "${local.env.domain_name}-${local.env.name}-cloudfront-logs"
+#
+#  lifecycle {
+#    ignore_changes = [
+#      grant, # Managed by CloudFront; ignore the changes
+#    ]
+#  }
+#}

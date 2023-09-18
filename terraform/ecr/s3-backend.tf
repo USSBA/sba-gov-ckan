@@ -1,9 +1,9 @@
 terraform {
   backend "s3" {
-    bucket         = "sbagovlower-terraform-remote-state"
+    bucket         = "sba-ckan-terraform-remote-state"
     key            = "ckan-ecr.tfstate"
     region         = "us-east-1"
-    dynamodb_table = "terraform-state-locktable"
+    dynamodb_table = "sba-ckan-terraform-state-locktable"
     acl            = "bucket-owner-full-control"
   }
 }
