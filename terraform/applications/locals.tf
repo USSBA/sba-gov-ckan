@@ -22,7 +22,7 @@ locals {
     default = {
       name               = "ckan-${terraform.workspace}"
       zones              = formatlist("%s%s", local.region, keys(local.zone_map))
-      hosted_zone_id     = "Z34GMHAZJS247A"
+      hosted_zone_id     = "Z1043853321RLHLEHIM4V"#"Z34GMHAZJS247A"
       rds_username       = "ckan_default"
       rds_database_name  = "ckan_default"
       rds_instance_class = "db.t3.micro"
@@ -30,7 +30,7 @@ locals {
     staging = {
       single_nat_gateway          = true
       cidr                        = "10.250.0.0/16"
-      domain_name                 = "data.staging.sba.gov"
+      domain_name                 = "staging.ckan.ussba.io" #"data.staging.sba.gov"
       desired_capacity_ckan       = 1
       desired_capacity_datapusher = 1
       desired_capacity_solr       = 1 # never exceed 1 for solr
@@ -75,14 +75,17 @@ data "aws_ssm_parameter" "session_secret" {
   name = "/ckan/${terraform.workspace}/session_secret"
 }
 data "aws_ssm_parameter" "db_password" {
-  name = "/ckan/${terraform.workspace}/db_password/postgres"
+  name = "/ckan/${terraform.workspace}/rds/pass"
 }
-data "aws_ssm_parameter" "ses_user" {
-  name = "SES_USER"
+data "aws_ssm_parameter" "sysadmin_pass" {
+  name = "/ckan/${terraform.workspace}/sysadmin/pass"
 }
-data "aws_ssm_parameter" "ses_password" {
-  name = "SES_PASSWORD"
-}
+#data "aws_ssm_parameter" "ses_user" {
+#  name = "SES_USER"
+#}
+#data "aws_ssm_parameter" "ses_password" {
+#  name = "SES_PASSWORD"
+#}
 data "aws_acm_certificate" "ssl" {
   domain   = local.env.domain_name
   statuses = ["ISSUED"]

@@ -19,7 +19,7 @@ data "aws_cloudfront_origin_request_policy" "all_viewer" {
 #}
 
 resource "aws_cloudfront_distribution" "distribution" {
-  aliases          = [local.env.domain_name]
+  aliases          = ["data.${local.env.domain_name}"]
   comment          = "CKAN ${title(terraform.workspace)}"
   enabled          = true
   http_version     = "http2"

@@ -8,13 +8,13 @@ locals {
   ckan = {
     default = {
       name               = "ckan-${terraform.workspace}"
-      hosted_zone_id     = "Z34GMHAZJS247A"
+      hosted_zone_id     = "Z1043853321RLHLEHIM4V" #"Z34GMHAZJS247A"
       rds_username       = "ckan_default"
       rds_database_name  = "ckan_default"
       rds_instance_class = "db.t3.micro"
     }
     staging = {
-      domain_name = "data.staging.sba.gov"
+      domain_name = "staging.ckan.ussba.io"#"data.staging.sba.gov"
     }
     production = {
       domain_name = "data.sba.gov"
