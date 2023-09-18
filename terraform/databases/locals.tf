@@ -14,7 +14,7 @@ locals {
       rds_instance_class = "db.t3.micro"
     }
     staging = {
-      domain_name = "staging.ckan.ussba.io"#"data.staging.sba.gov"
+      domain_name = "staging.ckan.ussba.io" #"data.staging.sba.gov"
     }
     production = {
       domain_name = "data.sba.gov"

@@ -31,12 +31,12 @@ module "ckan_db" {
   enable_http_endpoint = true
   network_type         = "IPV4"
 
-  subnets                         = data.aws_subnets.private.ids
-  create_db_subnet_group          = true
-  vpc_id                          = data.aws_vpc.ckan.id
-  monitoring_interval             = 60
-  apply_immediately               = true #local.env.apply_db_changes_immediately
-  storage_encrypted               = true
+  subnets                = data.aws_subnets.private.ids
+  create_db_subnet_group = true
+  vpc_id                 = data.aws_vpc.ckan.id
+  monitoring_interval    = 60
+  apply_immediately      = true #local.env.apply_db_changes_immediately
+  storage_encrypted      = true
   #db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.ckan_rds.id
 
   skip_final_snapshot       = true #local.env.db_skip_final_snapshot
