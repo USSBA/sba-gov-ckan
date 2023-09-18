@@ -11,7 +11,7 @@ resource "aws_route53_record" "cloudfront" {
 
 resource "aws_route53_record" "domain" {
   zone_id = local.env.hosted_zone_id
-  name    = "data.${local.env.domain_name}"
+  name    = local.fqdn_data
   type    = "A"
   alias {
     name                   = aws_cloudfront_distribution.distribution.domain_name

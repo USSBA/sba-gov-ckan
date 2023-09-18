@@ -8,6 +8,7 @@ terraform {
   }
 }
 
+# Leaving commented out until the migration is complete so we can swap back and forth in states if needed.
 #terraform {
 #  backend "s3" {
 #    bucket         = "sbagovlower-terraform-remote-state"
