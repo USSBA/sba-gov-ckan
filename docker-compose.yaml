@@ -70,9 +70,7 @@ services:
 
   solr:
     container_name: solr
-    image: ckan-solr
-    build:
-      context: ./ckan-solr/
+    image: ckan/ckan-solr:2.10-solr9
     expose:
     - 8983
     ports:
@@ -82,6 +80,8 @@ services:
         ipv4_address: 10.10.0.5
     volumes:
     - solr:/opt/solr/server/solr/ckan/data/
+    ## This can be toggled as needed to mimic the EFS configuration in AWS.
+    #- ./logs:/var/solr/logs
 
   redis:
     container_name: redis

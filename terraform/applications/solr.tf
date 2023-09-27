@@ -37,7 +37,8 @@ module "ckan_solr" {
     {
       name         = "solr"
       portMappings = [{ containerPort = 8983 }]
-      image        = "${local.prefix_ecr}/ckan-solr:${var.image_tag}"
+      # Pulling the supported image straight from CKAN. Should help reduce complexity and management required by IAS.
+      image = "ckan/ckan-solr:2.10-solr9"
     }
   ]
 
@@ -48,6 +49,12 @@ module "ckan_solr" {
       container_path = "/opt/solr/server/solr/ckan/data/"
       file_system_id = module.efs["solr"].id
       root_directory = "/"
+    },
+    {
+      container_name = "solr"
+      container_path = "/var/solr/logs/"
+      file_system_id = module.efs["solr"].id
+      root_directory = "/logs"
     }
   ]
 }
