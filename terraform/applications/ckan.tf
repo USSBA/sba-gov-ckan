@@ -79,6 +79,13 @@ module "ckan_web" {
         { name = "DATAPUSHER_FQDN", value = local.fqdn_datapusher },
         { name = "REDIS_FQDN", value = local.fqdn_redis },
         { name = "SOLR_FQDN", value = local.fqdn_solr },
+        # SQLAlchemy URLs
+        { name = "CKAN_SQLALCHEMY_URL", value = "postgresql://ckan_default:${data.aws_ssm_parameter.db_password.value}@${local.fqdn_postgres}/ckan_default" },
+        { name = "CKAN_DATASTORE_WRITE_URL", value = "postgresql://ckan_default:${data.aws_ssm_parameter.db_password.value}@${local.fqdn_postgres}/datastore" },
+        { name = "CKAN_DATASTORE_READ_URL", value = "postgresql://datastore_ro:datastore@${local.fqdn_postgres}/datastore" },
+        { name = "TEST_CKAN_SQLALCHEMY_URL", value = "postgresql://ckan_default:${data.aws_ssm_parameter.db_password.value}@${local.fqdn_postgres}/ckan_test" },
+        { name = "TEST_CKAN_DATASTORE_WRITE_URL", value = "postgresql://ckan_default:${data.aws_ssm_parameter.db_password.value}@${local.fqdn_postgres}/datastore_test" },
+        { name = "TEST_CKAN_DATASTORE_READ_URL", value = "postgresql://datastore_ro:datastore@${local.fqdn_postgres}/datastore_test" },
         # Ports
         { name = "CKAN_PORT", value = "5000" },
         { name = "DATAPUSHER_PORT", value = "8800" },
