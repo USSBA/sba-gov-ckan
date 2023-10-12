@@ -41,9 +41,9 @@ module "ckan_web" {
   service_fqdn           = local.fqdn_web
   hosted_zone_id         = local.env.hosted_zone_id
   certificate_arn        = data.aws_acm_certificate.ssl.arn
-  private_subnet_ids     = module.vpc.private_subnets
-  public_subnet_ids      = module.vpc.public_subnets
-  vpc_id                 = module.vpc.vpc_id
+  private_subnet_ids     = data.aws_subnets.private.ids
+  public_subnet_ids      = data.aws_subnets.public.ids
+  vpc_id                 = data.aws_vpc.ckan.id
   enable_execute_command = true
 
   # Health Checks
