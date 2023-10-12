@@ -25,8 +25,8 @@ module "ckan_solr" {
   # networking
   service_fqdn           = local.fqdn_solr
   hosted_zone_id         = local.env.hosted_zone_id
-  private_subnet_ids     = module.vpc.private_subnets
-  vpc_id                 = module.vpc.vpc_id
+  private_subnet_ids     = data.aws_subnets.private.ids
+  vpc_id                 = data.aws_vpc.ckan.id
   listeners              = [{ port = 8983, protocol = "HTTP", action = { type = "forward" } }]
   enable_execute_command = true
 

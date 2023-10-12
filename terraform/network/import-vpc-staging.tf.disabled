@@ -1,0 +1,176 @@
+# VPC
+import {
+  to = module.vpc.aws_vpc.this[0]
+  id = "vpc-065661bf243c63826"
+}
+
+# INTERNET GATEWAY
+import {
+  to = module.vpc.aws_internet_gateway.this[0]
+  id = "igw-006a2e07ddb874f38"
+}
+
+# PRIVATE SUBNETS
+import {
+  to = module.vpc.aws_subnet.private[0]
+  id = "subnet-08e14aa19eb632f5f"
+}
+import {
+  to = module.vpc.aws_subnet.private[1]
+  id = "subnet-052b010cf191616c7"
+}
+
+# PUBLIC SUBNETS
+import {
+  to = module.vpc.aws_subnet.public[0]
+  id = "subnet-037c0745f0286311d"
+}
+import {
+  to = module.vpc.aws_subnet.public[1]
+  id = "subnet-021e3ab5fa1fdd995"
+}
+
+# EIP
+import {
+  to = module.vpc.aws_eip.nat[0]
+  id = "eipalloc-06e4daff01049b073"
+}
+
+# NAT Gateway
+import {
+  to = module.vpc.aws_nat_gateway.this[0]
+  id = "nat-0feef6dd2bc7d20f2"
+}
+
+# PRIVATE NACL
+import {
+  to = module.vpc.aws_network_acl.private[0]
+  id = "acl-0fec3f89ad030ceab"
+}
+import {
+  to = module.vpc.aws_network_acl_rule.private_inbound[0]
+  id = "acl-0fec3f89ad030ceab:100:6:false"
+}
+import {
+  to = module.vpc.aws_network_acl_rule.private_inbound[1]
+  id = "acl-0fec3f89ad030ceab:101:6:false"
+}
+import {
+  to = module.vpc.aws_network_acl_rule.private_inbound[2]
+  id = "acl-0fec3f89ad030ceab:102:17:false"
+}
+import {
+  to = module.vpc.aws_network_acl_rule.private_inbound[3]
+  id = "acl-0fec3f89ad030ceab:103:6:false"
+}
+import {
+  to = module.vpc.aws_network_acl_rule.private_outbound[0]
+  id = "acl-0fec3f89ad030ceab:100:-1:true"
+}
+import {
+  to = module.vpc.aws_network_acl_rule.private_outbound[1]
+  id = "acl-0fec3f89ad030ceab:101:6:true"
+}
+import {
+  to = module.vpc.aws_network_acl_rule.private_outbound[2]
+  id = "acl-0fec3f89ad030ceab:102:6:true"
+}
+import {
+  to = module.vpc.aws_network_acl_rule.private_outbound[3]
+  id = "acl-0fec3f89ad030ceab:103:6:true"
+}
+import {
+  to = module.vpc.aws_network_acl_rule.private_outbound[4]
+  id = "acl-0fec3f89ad030ceab:104:6:true"
+}
+
+# PUBLIC NACL
+import {
+  to = module.vpc.aws_network_acl.public[0]
+  id = "acl-00a5e2100abfa0297"
+}
+import {
+  to = module.vpc.aws_network_acl_rule.public_inbound[0]
+  id = "acl-00a5e2100abfa0297:100:6:false"
+}
+import {
+  to = module.vpc.aws_network_acl_rule.public_inbound[1]
+  id = "acl-00a5e2100abfa0297:101:6:false"
+}
+import {
+  to = module.vpc.aws_network_acl_rule.public_inbound[2]
+  id = "acl-00a5e2100abfa0297:102:17:false"
+}
+import {
+  to = module.vpc.aws_network_acl_rule.public_inbound[3]
+  id = "acl-00a5e2100abfa0297:103:6:false"
+}
+import {
+  to = module.vpc.aws_network_acl_rule.public_inbound[4]
+  id = "acl-00a5e2100abfa0297:104:6:false"
+}
+import {
+  to = module.vpc.aws_network_acl_rule.public_inbound[5]
+  id = "acl-00a5e2100abfa0297:105:17:false"
+}
+#--egress--
+import {
+  to = module.vpc.aws_network_acl_rule.public_outbound[0]
+  id = "acl-00a5e2100abfa0297:100:-1:true"
+}
+import {
+  to = module.vpc.aws_network_acl_rule.public_outbound[1]
+  id = "acl-00a5e2100abfa0297:101:6:true"
+}
+import {
+  to = module.vpc.aws_network_acl_rule.public_outbound[2]
+  id = "acl-00a5e2100abfa0297:102:6:true"
+}
+import {
+  to = module.vpc.aws_network_acl_rule.public_outbound[3]
+  id = "acl-00a5e2100abfa0297:103:17:true"
+}
+import {
+  to = module.vpc.aws_network_acl_rule.public_outbound[4]
+  id = "acl-00a5e2100abfa0297:104:6:true"
+}
+import {
+  to = module.vpc.aws_network_acl_rule.public_outbound[5]
+  id = "acl-00a5e2100abfa0297:105:6:true"
+}
+
+# PRIVATE ROUTES/TABLE
+import {
+  to = module.vpc.aws_route_table.private[0]
+  id = "rtb-00787e55a4659db93"
+}
+import {
+  to = module.vpc.aws_route.private_nat_gateway[0]
+  id = "rtb-00787e55a4659db93_0.0.0.0/0"
+}
+import {
+  to = module.vpc.aws_route_table_association.private[0]
+  id = "subnet-08e14aa19eb632f5f/rtb-00787e55a4659db93"
+}
+import {
+  to = module.vpc.aws_route_table_association.private[1]
+  id = "subnet-052b010cf191616c7/rtb-00787e55a4659db93"
+}
+
+# PUBLIC ROUTES/TABLE
+import {
+  to = module.vpc.aws_route_table.public[0]
+  id = "rtb-0405a8048254bd85a"
+}
+import {
+  to = module.vpc.aws_route.public_internet_gateway[0]
+  id = "rtb-0405a8048254bd85a_0.0.0.0/0"
+}
+import {
+  to = module.vpc.aws_route_table_association.public[0]
+  id = "subnet-037c0745f0286311d/rtb-0405a8048254bd85a"
+}
+import {
+  to = module.vpc.aws_route_table_association.public[1]
+  id = "subnet-021e3ab5fa1fdd995/rtb-0405a8048254bd85a"
+}

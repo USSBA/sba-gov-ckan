@@ -3,8 +3,18 @@ resource "aws_wafv2_web_acl" "waf_cloudfront" {
   description = "${terraform.workspace}-ckan-cloudfront-acl"
   scope       = "CLOUDFRONT"
 
-  default_action {
-    allow {}
+  dynamic "default_action" {
+    for_each = contains(["staging"], terraform.workspace) ? ["ON"] : []
+    content {
+      block {}
+    }
+  }
+
+  dynamic "default_action" {
+    for_each = !contains(["staging"], terraform.workspace) ? ["ON"] : []
+    content {
+      allow {}
+    }
   }
 
   # RATE LIMIT
