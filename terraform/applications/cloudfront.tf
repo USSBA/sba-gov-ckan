@@ -19,18 +19,19 @@ data "aws_cloudfront_origin_request_policy" "all_viewer" {
 #}
 
 resource "aws_cloudfront_distribution" "distribution" {
-  aliases          = [local.fqdn_data]
-  comment          = "CKAN ${title(terraform.workspace)}"
-  enabled          = true
-  http_version     = "http2"
-  is_ipv6_enabled  = false
-  price_class      = "PriceClass_100"
-  retain_on_delete = false
+  aliases             = [local.fqdn_data]
+  comment             = "CKAN ${title(terraform.workspace)}"
+  enabled             = true
+  http_version        = "http2"
+  is_ipv6_enabled     = false
+  price_class         = "PriceClass_100"
+  retain_on_delete    = false
+  wait_for_deployment = true
+  web_acl_id          = aws_wafv2_web_acl.waf_cloudfront.arn
   tags = {
     "Environment" = terraform.workspace
     "Name"        = "ckan-${terraform.workspace}-cloudfront"
   }
-  wait_for_deployment = true
 
   default_cache_behavior {
     allowed_methods = [
@@ -573,8 +574,8 @@ resource "aws_cloudfront_distribution" "distribution" {
 
   restrictions {
     geo_restriction {
-      locations        = []
-      restriction_type = "none"
+      restriction_type = "blacklist"
+      locations        = ["RU", "HK", "CN", "IR"] #Russia, Hong Kong, China, Iran
     }
   }
 
