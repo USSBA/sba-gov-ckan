@@ -2,7 +2,7 @@ version: '3'
 
 volumes:
   ckan:
-  solr:
+  #solr:
   postgres:
 
 networks:
@@ -36,8 +36,8 @@ services:
     ## AWS Configuration: uncomment this line and ensure you have your AWS credentials configured in your local ~/.aws directory
     #- ~/.aws/:/root/.aws/
 
-  datapusher:
-    container_name: datapusher
+  xloader:
+    container_name: xloader
     image: ckan-datapusher
     build:
       context: ./ckan-datapusher/
@@ -50,6 +50,23 @@ services:
         ipv4_address: 10.10.0.3
     extra_hosts:
     - sba.ckan.com:10.10.0.2
+    env_file:
+      - .env.local
+
+  #datapusher:
+  #  container_name: datapusher
+  #  image: ckan-datapusher
+  #  build:
+  #    context: ./ckan-datapusher/
+  #  expose:
+  #  - 8800
+  #  ports:
+  #  - 8800:8800
+  #  networks:
+  #    vpc:
+  #      ipv4_address: 10.10.0.3
+  #  extra_hosts:
+  #  - sba.ckan.com:10.10.0.2
 
   postgres:
     container_name: postgres
@@ -78,8 +95,8 @@ services:
     networks:
       vpc:
         ipv4_address: 10.10.0.5
-    volumes:
-    - solr:/opt/solr/server/solr/ckan/data/
+    #volumes:
+    #- solr:/opt/solr/server/solr/ckan/data/
     ## This can be toggled as needed to mimic the EFS configuration in AWS.
     #- ./logs:/var/solr/logs
 
