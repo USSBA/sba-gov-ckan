@@ -12,6 +12,103 @@ Custom Docker Images
 
 ![Network Diagram](docs/images/ckan-network.png)
 
+## CKAN Plugins
+
+### Plugins
+
+Plugins are not native and require additional installation steps.
+
+- `xloader`: Loads CSV and similar data into CKAN's datastore. Designed to replace DataPusher. [GitHub](https://github.com/ckan/ckanext-xloader).
+
+- `google-analytics`: Puts the google analytics asynchronous tracking code into your page headers. [GitHub](https://github.com/GSA/ckanext-googleanalyticsbasic)
+
+- `s3filestore`: Use Amazon S3 as a filestore for resources. [GitHub](https://github.com/keitaroinc/ckanext-s3filestore)
+
+- `ckanext-dcat_usmetadata`: This extension provides a new dataset form for inventory.data.gov. The form is tailored to managing metadata meeting the DCAT-US Schema [GitHub](https://github.com/GSA/ckanext-dcat_usmetadata)
+
+- `ckanext-datajson`: Plugin datajson provides a harvester to import datasets from other remote /data.json files. See below for setup instructions [GitHub](https://github.com/GSA/ckanext-datajson)
+
+- `ckanext-usmetadata`: expands CKAN to offer a number of custom fields related to the DCAT-US Schema [GitHub](expands CKAN to offer a number of custom fields related to the DCAT-US Schema)
+
+**envvars is now native to CKAN2.10**
+- `ckanext-envvars`: This CKAN extension checks for environmental variables conforming to an expected format and updates the corresponding CKAN config settings with its value [GitHub](https://github.com/GSA/ckanext-envvars)
+
+### Native Extensions
+
+Extensions are native and can be enabled by configuring the CKAN config file.
+
+- `datastore`: Provides an ad hoc database for storage of structured data from CKAN resources. Data can be pulled out of resource files and stored in the DataStore. [Documentation](https://docs.ckan.org/en/2.9/maintaining/datastore.html)
+- `stats`: Analyzes your CKAN database and displays several tables and graphs with statics about your site. [Documentation](https://docs.ckan.org/en/2.9/maintaining/stats.html)
+- `text_view`: Displays files in XML, JSON or plain text based formats with the syntax highlighted. [Documentation](https://docs.ckan.org/en/2.10/maintaining/data-viewer.html#text-view)
+- `recline_view`: **Deprecated and should not be used**. Recommends if needed to replace with `React Data Explorer`. [Documentation](https://github.com/datopian/data-explorer)
+
+### Installing Plugins
+
+All dependencies are currently managed in `/ckan/requirements.txt`. If separate installation is required please review the documentation links above or follow the install instructions below.
+
+#### install `google-analytics`
+
+1. install the plugin
+```sh
+pip install ckanext-googleanalyticsbasic
+```
+
+2. add `google_analytics` to `ckan_plugins` in `.env`
+```sh
+ckan__plugins="datastore datapusher stats text_view recline_view envvars googleanalyticsbasic"
+```
+
+#### install `ckanext-dcat_usmetadata`
+
+1. install the plugin
+```sh
+pip install ckanext-dcat_usmetadata
+```
+
+2. add `ckanext-dcat_usmetadata` to `ckan_plugins` in `.env`
+```sh
+ckan__plugins="datastore datapusher stats text_view recline_view envvars dcat_usmetadata"
+```
+
+3. confirm `ckanext-dcat_usmetadata` is installed by running the following command:
+```sh
+ckan dcat_usmetadata --help
+```
+
+#### Install `ckanext-usmetadata`
+
+```sh
+pip install ckanext-usmetadata
+```
+
+2. Add `ckanext-usmetadata` to `CKAN_PLUGINS` in `.env`
+```sh
+CKAN__PLUGINS="datastore datapusher stats text_view recline_view envvars usmetadata"
+```
+
+3. Confirm `ckanext-dcat_usmetadata` is installed by creating a dataset. The form should have a message at the top stating the following:
+```sh
+The following fields are required metadata for each dataset in an agency’s inventory (per Section 202 of the OPEN Government Data Act). For more information about the form fields, consult the DCAT-US Schema.
+```
+
+#### Install `ckanext-datajson`
+
+```sh
+pip install ckanext-datajson
+pip -e git+https://github.com/ckan/ckanext-harvest.git@2e5ac42f3ba58dd4bcb1e69a783e155828ff4b89#egg=ckanext-harvest
+pip install requirements.txt (contains other packages required for harvest)
+```
+
+2. Add `ckanext-datajson` to `CKAN_PLUGINS` in `.env`
+```sh
+CKAN__PLUGINS="datastore datapusher stats text_view recline_view envvars datajson harvest datajson_harvest datajson_validator"
+```
+
+3. Confirm `ckanext-datajson` is installed the endpoint for validation should be accessible at:
+```sh
+http://domain.com/dcat-us/validator
+```
+
 ## User Management
 
 The purpose of this section is to demonstrate how user accounts can be created, password can be reset, and if necessary promote a user to sysadmin status using the ckan command line utility from a running container. This section assumes that you are using the docker-compose solution provided and that CKAN services are already running on your local machine or that you have a running AWS Fargate service.
