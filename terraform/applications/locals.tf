@@ -29,10 +29,10 @@ locals {
     }
     production = {
       single_nat_gateway          = false
-      domain_name                 = "data.sba.gov"
-      desired_capacity_ckan       = 3
-      desired_capacity_datapusher = 2
-      desired_capacity_solr       = 1 # never exceed 1 for solr
+      domain_name                 = "production.ckan.ussba.io" #"data.sba.gov"
+      desired_capacity_ckan       = 1                          #3
+      desired_capacity_datapusher = 1                          #2
+      desired_capacity_solr       = 1                          # never exceed 1 for solr
     }
   }
 

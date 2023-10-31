@@ -64,7 +64,7 @@ module "ckan_web" {
         # CKAN Defaults
         { name = "CKAN_VERSION", value = "2.10.0" },
         { name = "CKAN_SITE_ID", value = "default" },
-        { name = "CKAN_STORAGE_PATH", value = "/var/lib/ckan/default" },
+        { name = "CKAN_STORAGE_PATH", value = "/var/lib/ckan" },
         { name = "CKAN___BEAKER__SESSION__SECRET", value = "CHANGE_ME" },
         { name = "CKAN___API_TOKEN__JWT__ENCODE__SECRE", value = "string:CHANGE_ME" },
         { name = "CKAN___API_TOKEN__JWT__DECODE__SECRET=", value = "string:CHANGE_ME" },
@@ -114,7 +114,7 @@ module "ckan_web" {
   efs_configs = [
     {
       container_name = "web"
-      container_path = "/var/lib/ckan/default"
+      container_path = "/var/lib/ckan"
       file_system_id = module.efs["web"].id
       root_directory = "/"
     }

@@ -16,13 +16,12 @@ networks:
 services:
   ckan:
     container_name: ckan
-    #image: ckan
-    image: openknowledge/ckan-dev:2.10.1
+    image: ckan
     depends_on:
     - postgres
-   # build:
-   #   context: ./ckan/
-   #   dockerfile: Dockerfile
+    build:
+      context: ./ckan/
+      dockerfile: Dockerfile
     expose:
     - 5000
     ports:
@@ -36,6 +35,24 @@ services:
     #- ckan:/var/lib/ckan/
     ## AWS Configuration: uncomment this line and ensure you have your AWS credentials configured in your local ~/.aws directory
     #- ~/.aws/:/root/.aws/
+
+  # New datapusher which appears to work. Need to speak with GSA as it looks like they are using XLoader and they themselves have a custom image.
+  # will deploy this to AWS.
+  datapusher:
+    container_name: datapusher
+    #image: ckan-datapusher
+    image: openknowledge/datapusher
+    #build:
+    #  context: ./ckan-datapusher/
+    expose:
+    - 8800
+    ports:
+    - 8800:8800
+    networks:
+      vpc:
+        ipv4_address: 10.10.0.3
+    extra_hosts:
+    - sba.ckan.com:10.10.0.2
 
   ## Old datapusher leaving here temporarily until we meet with GSA
   #datapusher:
@@ -53,27 +70,9 @@ services:
   #  extra_hosts:
   #  - sba.ckan.com:10.10.0.2
 
-  # New datapusher which appears to work. Need to speak with GSA as it looks like they are using XLoader and they themselves have a custom image.
-  datapusher:
-    container_name: datapusher
-    #image: ckan-datapusher
-    image: openknowledge/datapusher
-    #build:
-    #  context: ./ckan-datapusher/
-    expose:
-    - 8800
-    ports:
-    - 8800:8800
-    networks:
-      vpc:
-        ipv4_address: 10.10.0.3
-    extra_hosts:
-    - sba.ckan.com:10.10.0.2
-
   postgres:
     container_name: postgres
     image: postgres:12.0-alpine
-    #image: postgres:11.1
     environment:
     - POSTGRES_PASSWORD=fearless
     - POSTGRES_USER=ckan_default
