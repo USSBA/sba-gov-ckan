@@ -30,6 +30,6 @@ locals {
 }
 
 # data elements
-data "aws_ssm_parameter" "db_password" {
-  name = "/ckan/${terraform.workspace}/db_password/postgres"
-}
+#data "aws_ssm_parameter" "db_password" {
+#  name = "/ckan/${terraform.workspace}/db_password/postgres"
+#}
