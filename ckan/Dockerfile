@@ -1,5 +1,4 @@
-#FROM ckan/ckan-base:2.10.1
-FROM openknowledge/ckan-dev:2.10.1
+FROM ckan/ckan-base:2.10.1
 
 RUN apk update
 

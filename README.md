@@ -38,14 +38,18 @@ aws s3 cp s3://230968663929-us-east-1-ckan-migration/storage/ storage/ --recursi
 
 4. Connect to the CKAN container and perform a DB upgrade
 
+[documentation](https://docs.ckan.org/en/2.9/maintaining/database-management.html#db-upgrade)
+
 ```sh
 ckan -c /srv/app/ckan.ini db upgrade
 ```
 
 5. Reindex search
 
+[documentation](https://docs.ckan.org/en/2.9/maintaining/cli.html#rebuild-search-index)
+
 ```sh
-ckan -c /srv/app/ckan.ini db upgrade
+ckan -c /srv/app/ckan.ini search-index rebuild
 ```
 
 ## CKAN Plugins

@@ -70,6 +70,7 @@ module "ckan_web" {
         { name = "CKAN___API_TOKEN__JWT__DECODE__SECRET=", value = "string:CHANGE_ME" },
         { name = "CKAN__AUTH__CREATE_USER_VIA_API", value = "false" },
         { name = "CKAN__AUTH__CREATE_USER_VIA_WEB", value = "false" },
+        { name = "CKAN__PLUGINS", value = "datastore datapusher stats text_view recline_view envvars dcat_usmetadata usmetadata googleanalyticsbasic datajson harvest datajson_validator datajson_harvest" },
         # Domains & FQDN'S
         { name = "CKAN_SITE_URL", value = "https://data.${local.env.domain_name}" },
         { name = "CKAN_SOLR_URL", value = "http://${local.fqdn_solr}:8983/solr/ckan" },
