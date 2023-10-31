@@ -12,6 +12,42 @@ Custom Docker Images
 
 ![Network Diagram](docs/images/ckan-network.png)
 
+## Data Migration
+
+CKAN is currently being stood up in a new AWS account. Data will need to be migrated from the old `sba.gov` aws account to the new `ckan` account. In order to migrate data perform the following steps:
+
+1. use `pg_dump` to dump the database to s3
+
+```sh
+pg_dump --format=custom -d ckan_default > ckan.dump
+aws s3 cp s3://230968663929-us-east-1-ckan-migration/ckan.dump
+```
+
+2. Restore the database into the new environment
+
+```sh
+pg_restore --clean --if-exists -d ckan_default < ckan.dump
+```
+
+3. Copy the assets from s3 to EFS
+
+```sh
+aws s3 cp s3://230968663929-us-east-1-ckan-migration/resources/ resources/ --recursive
+aws s3 cp s3://230968663929-us-east-1-ckan-migration/storage/ storage/ --recursive
+```
+
+4. Connect to the CKAN container and perform a DB upgrade
+
+```sh
+ckan -c /srv/app/ckan.ini db upgrade
+```
+
+5. Reindex search
+
+```sh
+ckan -c /srv/app/ckan.ini db upgrade
+```
+
 ## CKAN Plugins
 
 ### Plugins
