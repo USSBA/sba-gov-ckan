@@ -8,7 +8,7 @@ resource "random_password" "ckan_rds_pass" {
 }
 
 resource "aws_ssm_parameter" "ckan_rds_pass" {
-  name  = "/${terraform.workspace}/ckan/rds/pass"
+  name  = "/ckan/${terraform.workspace}/rds/pass"
   type  = "SecureString"
   value = random_password.ckan_rds_pass.result
 }

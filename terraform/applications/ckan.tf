@@ -64,12 +64,13 @@ module "ckan_web" {
         # CKAN Defaults
         { name = "CKAN_VERSION", value = "2.10.0" },
         { name = "CKAN_SITE_ID", value = "default" },
-        { name = "CKAN_STORAGE_PATH", value = "/var/lib/ckan/default" },
+        { name = "CKAN_STORAGE_PATH", value = "/var/lib/ckan" },
         { name = "CKAN___BEAKER__SESSION__SECRET", value = "CHANGE_ME" },
         { name = "CKAN___API_TOKEN__JWT__ENCODE__SECRE", value = "string:CHANGE_ME" },
         { name = "CKAN___API_TOKEN__JWT__DECODE__SECRET=", value = "string:CHANGE_ME" },
         { name = "CKAN__AUTH__CREATE_USER_VIA_API", value = "false" },
         { name = "CKAN__AUTH__CREATE_USER_VIA_WEB", value = "false" },
+        { name = "CKAN__PLUGINS", value = "datastore datapusher stats text_view recline_view envvars dcat_usmetadata usmetadata googleanalyticsbasic datajson harvest datajson_validator datajson_harvest" },
         # Domains & FQDN'S
         { name = "CKAN_SITE_URL", value = "https://data.${local.env.domain_name}" },
         { name = "CKAN_SOLR_URL", value = "http://${local.fqdn_solr}:8983/solr/ckan" },
@@ -114,7 +115,7 @@ module "ckan_web" {
   efs_configs = [
     {
       container_name = "web"
-      container_path = "/var/lib/ckan/default"
+      container_path = "/var/lib/ckan"
       file_system_id = module.efs["web"].id
       root_directory = "/"
     }
