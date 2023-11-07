@@ -2,9 +2,9 @@ module "backup-plans" {
   source  = "USSBA/backup-plans/aws"
   version = "~> 6.0"
 
-  enabled       = true
-# currently not enabled on this account
-# sns_topic_arn = data.aws_sns_topic.alerts["red"].arn
+  enabled = true
+  # currently not enabled on this account
+  # sns_topic_arn = data.aws_sns_topic.alerts["red"].arn
 
   cross_region_backup_enabled = true
   cross_region_destination    = "us-west-2"
