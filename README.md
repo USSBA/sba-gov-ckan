@@ -19,14 +19,14 @@ CKAN is currently being stood up in a new AWS account. Data will need to be migr
 1. use `pg_dump` to dump the database to s3
 
 ```sh
-pg_dump --format=custom -d ckan_default > ckan.dump
+pg_dump -U ckan_default -h ${HOST} --clean --if-exists -d ckan_default > ckan.dump
 aws s3 cp s3://230968663929-us-east-1-ckan-migration/ckan.dump
 ```
 
 2. Restore the database into the new environment
 
 ```sh
-pg_restore --clean --if-exists -d ckan_default < ckan.dump
+pg_restore -U ckan_default -h ${HOST} --clean --if-exists -d ckan_default < ckan.dump
 ```
 
 3. Copy the assets from s3 to EFS
@@ -34,6 +34,11 @@ pg_restore --clean --if-exists -d ckan_default < ckan.dump
 ```sh
 aws s3 cp s3://230968663929-us-east-1-ckan-migration/resources/ resources/ --recursive
 aws s3 cp s3://230968663929-us-east-1-ckan-migration/storage/ storage/ --recursive
+```
+
+4. Set the following permissions on the CKAN EFS mount:
+```sh
+chown -R 92:root .
 ```
 
 4. Connect to the CKAN container and perform a DB upgrade
