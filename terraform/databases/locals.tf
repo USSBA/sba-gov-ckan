@@ -8,13 +8,14 @@ locals {
   ckan = {
     default = {
       name               = "ckan-${terraform.workspace}"
-      hosted_zone_id     = "Z1043853321RLHLEHIM4V" #"Z34GMHAZJS247A"
+      hosted_zone_id     = "Z1043853321RLHLEHIM4V"
       rds_username       = "ckan_default"
       rds_database_name  = "ckan_default"
       rds_instance_class = "db.t3.micro"
+      rds_dns_prefix     = "postgres"
     }
     staging = {
-      domain_name = "staging.ckan.ussba.io" #"data.staging.sba.gov"
+      domain_name = "staging.ckan.ussba.io"
     }
     production = {
       domain_name = "data.sba.gov"
@@ -28,8 +29,3 @@ locals {
   fqdn_postgres = "postgres.${local.env.domain_name}"
   fqdn_redis    = "redis.${local.env.domain_name}"
 }
-
-# data elements
-#data "aws_ssm_parameter" "db_password" {
-#  name = "/ckan/${terraform.workspace}/db_password/postgres"
-#}
