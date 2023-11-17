@@ -60,3 +60,12 @@ module "ckan_db" {
     BackupWeekly    = terraform.workspace == "prod" ? true : false
   }
 }
+
+resource "aws_route53_record" "ckan_db" {
+  allow_overwrite = true
+  zone_id         = local.env.hosted_zone_id
+  name            = "${local.env.rds_dns_prefix}.${local.env.domain_name}"
+  type            = "CNAME"
+  ttl             = 300
+  records         = [module.ckan_db.cluster_endpoint]
+}

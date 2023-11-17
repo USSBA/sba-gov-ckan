@@ -122,3 +122,16 @@ module "ckan_web" {
   ]
 }
 
+data "aws_rds_cluster" "aurora" {
+  cluster_identifier = "${terraform.workspace}-ckan"
+}
+
+resource "aws_security_group_rule" "ckan2aurora" {
+  for_each                 = data.aws_rds_cluster.aurora.vpc_security_group_ids
+  type                     = "ingress"
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "tcp"
+  source_security_group_id = module.ckan_web.security_group_id
+  security_group_id        = each.value
+}
