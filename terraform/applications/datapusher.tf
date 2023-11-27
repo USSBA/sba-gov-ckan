@@ -33,7 +33,7 @@ module "ckan_datapusher" {
     {
       name         = "datapusher"
       portMappings = [{ containerPort = 8800 }]
-      image        = "openknowledge/datapusher"
+      image        = "ckan/ckan-base-datapusher:0.0.20"
     }
   ]
 }
