@@ -11,6 +11,7 @@ module "ckan_solr" {
   # application load-balancer access logs
   alb_log_bucket_name = "${local.account_id}-${local.region}-logs"
   alb_log_prefix      = "alb/ckan-solr/${terraform.workspace}"
+  task_policy_json    = data.aws_iam_policy_document.task.json
 
   # task
   family      = "${local.env.name}-solr"

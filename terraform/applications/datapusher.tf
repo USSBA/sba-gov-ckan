@@ -9,6 +9,7 @@ module "ckan_datapusher" {
   # application load-balancer access logs
   alb_log_bucket_name = "${local.account_id}-${local.region}-logs"
   alb_log_prefix      = "alb/ckan-datapusher/${terraform.workspace}"
+  task_policy_json    = data.aws_iam_policy_document.task.json
 
   # task
   family      = "${local.env.name}-datapusher"

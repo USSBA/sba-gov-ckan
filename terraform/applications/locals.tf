@@ -1,6 +1,10 @@
 data "aws_region" "this" {}
 data "aws_caller_identity" "this" {}
 
+data "aws_s3_bucket" "logs" {
+  bucket = "${local.account_id}-${local.region}-logs"
+}
+
 variable "image_tag" {
   default = "latest"
 }
