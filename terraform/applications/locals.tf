@@ -59,7 +59,10 @@ locals {
 
 # data elements
 data "aws_ssm_parameter" "google_analytics_id" {
-  name = "/ckan/google_analytics_id"
+  name = "/ckan/${terraform.workspace}/google_analytics_id"
+}
+data "aws_ssm_parameter" "google_analytics_password" {
+  name = "/ckan/${terraform.workspace}/google_analytics_password"
 }
 data "aws_ssm_parameter" "api_token" {
   name = "/ckan/${terraform.workspace}/api_token_secret"

@@ -95,12 +95,12 @@ All dependencies are currently managed in `/ckan/requirements.txt`. If separate 
 
 1. install the plugin
 ```sh
-pip install ckanext-googleanalyticsbasic
+pip install ckanext-googleanalytics
 ```
 
 2. add `google_analytics` to `ckan_plugins` in `.env`
 ```sh
-ckan__plugins="datastore datapusher stats text_view recline_view envvars googleanalyticsbasic"
+ckan__plugins="datastore datapusher stats text_view recline_view envvars googleanalytics"
 ```
 
 #### install `ckanext-dcat_usmetadata`
@@ -122,6 +122,8 @@ ckan dcat_usmetadata --help
 
 #### Install `ckanext-usmetadata`
 
+** This plugin appears to create a problem with google analytics **
+
 ```sh
 pip install ckanext-usmetadata
 ```
@@ -137,6 +139,9 @@ The following fields are required metadata for each dataset in an agency’s inv
 ```
 
 #### Install `ckanext-datajson`
+
+
+** This plugin appears to create a problem with google analytics and other plugins **
 
 ```sh
 pip install ckanext-datajson

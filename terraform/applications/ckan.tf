@@ -8,6 +8,8 @@ locals {
       { name = "POSTGRES_PASSWORD", valueFrom = data.aws_ssm_parameter.db_password.arn },
       { name = "CKAN_SYSADMIN_PASSWORD", valueFrom = data.aws_ssm_parameter.sysadmin_pass.arn },
       { name = "CKAN_DATAPUSHER_API_TOKEN", valueFrom = data.aws_ssm_parameter.datapusher_api_token.arn },
+      { name = "CKAN___GOOGLEANALYTICS__ID", valueFrom = data.aws_ssm_parameter.google_analytics_id.arn },
+      { name = "CKAN___GOOGLEANALYTICS__PASSWORD", valueFrom = data.aws_ssm_parameter.google_analytics_password.arn },
       #      { name = "CKAN_SMTP_USER", valueFrom = data.aws_ssm_parameter.ses_user.arn },
       #      { name = "CKAN_SMTP_PASSWORD", valueFrom = data.aws_ssm_parameter.ses_password.arn },
     ]
@@ -71,7 +73,13 @@ module "ckan_web" {
         { name = "CKAN___API_TOKEN__JWT__DECODE__SECRET=", value = "string:CHANGE_ME" },
         { name = "CKAN__AUTH__CREATE_USER_VIA_API", value = "false" },
         { name = "CKAN__AUTH__CREATE_USER_VIA_WEB", value = "false" },
-        { name = "CKAN__PLUGINS", value = "datastore datapusher stats text_view recline_view envvars dcat_usmetadata usmetadata googleanalyticsbasic datajson harvest datajson_validator datajson_harvest" },
+        # usmetadata plugins appears to cause plugins after it to not load properly.
+        # datajson_validator appears to cause errors after ckan loads and is causing errors with other plugins.
+        #{ name = "CKAN__PLUGINS", value = "datastore datapusher stats text_view recline_view dcat_usmetadata usmetadata googleanalytics datajson harvest datajson_validator datajson_harvest envvars" },
+        { name = "CKAN__PLUGINS", value = "image_view text_view recline_view datastore datapusher googleanalytics dcat_usmetadata datajson harvest datajson_harvest envvars" },
+        # Google Analytics
+        { name = "CKAN___GOOGLEANALYTICS__ACCOUNT", value = "fake" },
+        { name = "CKAN___GOOGLEANALYTICS__USERNAME", value = "fake" },
         # Domains & FQDN'S
         { name = "CKAN_SITE_URL", value = "https://data.${local.env.domain_name}" },
         { name = "CKAN_SOLR_URL", value = "http://${local.fqdn_solr}:8983/solr/ckan" },
