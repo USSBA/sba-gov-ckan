@@ -1,7 +1,6 @@
 ckanext-dcat-usmetadata
 ckanext-usmetadata
 ckanext-datajson
-ckanext-googleanalyticsbasic
 
 # ckanext-harvest and its requirements
  -e git+https://github.com/ckan/ckanext-harvest.git@2e5ac42f3ba58dd4bcb1e69a783e155828ff4b89#egg=ckanext-harvest
@@ -11,3 +10,11 @@ enum34; python_version < '3.0'  # Required by pika
 redis
 requests>=2.11.1
 six>=1.12.0
+
+# google analytics and its requirements
+ -e  git+https://github.com/ckan/ckanext-googleanalytics.git#egg=ckanext-googleanalytics
+ #-r ckanext-googleanalytics/requirements.txt
+gdata>=2.0.0
+google-api-python-client>=1.6.1, <1.7.0
+pyOpenSSL>=16.2.0
+rsa>=3.1.4, <=4.0
