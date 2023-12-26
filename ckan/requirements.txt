@@ -1,6 +1,10 @@
 ckanext-dcat-usmetadata
 ckanext-usmetadata
 ckanext-datajson
+ckanext-xloader
+
+# ckanext-xloader requirements
+ -r https://raw.githubusercontent.com/ckan/ckanext-xloader/master/requirements.txt
 
 # ckanext-harvest and its requirements
  -e git+https://github.com/ckan/ckanext-harvest.git@2e5ac42f3ba58dd4bcb1e69a783e155828ff4b89#egg=ckanext-harvest

@@ -36,40 +36,6 @@ services:
     ## AWS Configuration: uncomment this line and ensure you have your AWS credentials configured in your local ~/.aws directory
     #- ~/.aws/:/root/.aws/
 
-  # New datapusher which appears to work. Need to speak with GSA as it looks like they are using XLoader and they themselves have a custom image.
-  # will deploy this to AWS.
-  datapusher:
-    container_name: datapusher
-    #image: ckan-datapusher
-    image: openknowledge/datapusher
-    #build:
-    #  context: ./ckan-datapusher/
-    expose:
-    - 8800
-    ports:
-    - 8800:8800
-    networks:
-      vpc:
-        ipv4_address: 10.10.0.3
-    extra_hosts:
-    - sba.ckan.com:10.10.0.2
-
-  ## Old datapusher leaving here temporarily until we meet with GSA
-  #datapusher:
-  #  container_name: datapusher
-  #  image: ckan-datapusher
-  #  build:
-  #    context: ./ckan-datapusher/
-  #  expose:
-  #  - 8800
-  #  ports:
-  #  - 8800:8800
-  #  networks:
-  #    vpc:
-  #      ipv4_address: 10.10.0.3
-  #  extra_hosts:
-  #  - sba.ckan.com:10.10.0.2
-
   postgres:
     container_name: postgres
     image: postgres:12.0-alpine
