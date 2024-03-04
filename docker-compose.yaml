@@ -19,6 +19,7 @@ services:
     image: ckan
     depends_on:
     - postgres
+    - datastore
     build:
       context: ./ckan/
       dockerfile: Dockerfile
@@ -31,8 +32,6 @@ services:
         ipv4_address: 10.10.0.2
     env_file:
       - .env.local
-    #volumes:
-    #- ckan:/var/lib/ckan/
     ## AWS Configuration: uncomment this line and ensure you have your AWS credentials configured in your local ~/.aws directory
     #- ~/.aws/:/root/.aws/
 
@@ -48,9 +47,24 @@ services:
     networks:
       vpc:
         ipv4_address: 10.10.0.4
+    #volumes:
+    #- ./postgres/scripts:/docker-entrypoint-initdb.d/
+    #- postgres:/var/lib/postgresql/data/
+
+  datastore:
+    container_name: datastore
+    image: postgres:12.0-alpine
+    environment:
+    - POSTGRES_PASSWORD=datastore
+    - POSTGRES_USER=datastore
+    - POSTGRES_DB=datastore
+    expose:
+    - 5432
+    networks:
+      vpc:
+        ipv4_address: 10.10.0.8
     volumes:
     - ./postgres/scripts:/docker-entrypoint-initdb.d/
-    #- postgres:/var/lib/postgresql/data/
 
   solr:
     container_name: solr
