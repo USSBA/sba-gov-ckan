@@ -4,4 +4,6 @@ RUN apk update
 
 COPY requirements.txt .
 
+COPY ckan.ini /srv/app/ckan.ini
+
 RUN pip install -r requirements.txt
