@@ -16,9 +16,19 @@ locals {
     }
     staging = {
       domain_name = "staging.ckan.ussba.io"
+      db_instances = {
+        one = {
+          instance_class = "db.serverless"
+        }
+      }
     }
     production = {
       domain_name = "data.sba.gov"
+      db_instances = {
+        one = {
+          instance_class = "db.serverless"
+        }
+      }
     }
   }
 
