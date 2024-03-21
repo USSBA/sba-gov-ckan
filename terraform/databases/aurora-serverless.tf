@@ -26,7 +26,7 @@ module "ckan_db" {
   deletion_protection         = true
 
   engine               = "aurora-postgresql"
-  engine_version       = "11.18"
+  engine_version       = "11.21"
   engine_mode          = "serverless"
   enable_http_endpoint = true
   network_type         = "IPV4"

@@ -35,7 +35,7 @@ resource "aws_elasticache_cluster" "redis" {
   node_type                = "cache.m5.large"
   num_cache_nodes          = 1
   parameter_group_name     = "default.redis5.0"
-  engine_version           = "5.0.3"
+  engine_version           = "5.0.6"
   port                     = 6379
   maintenance_window       = "sun:05:00-sun:09:00"
   apply_immediately        = true
