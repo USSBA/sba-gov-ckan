@@ -1,9 +1,13 @@
 # global configuration for all jobs
 name: Staging
+#on:
+#  push:
+#    tags:
+#      - rc-v*.*
 on:
   push:
-    tags:
-      - rc-v*.*
+    branches:
+      - IA-*
 
 # sets the default shell for all jobs
 defaults:
@@ -30,8 +34,22 @@ jobs:
           aws-region: us-east-1
 
       - name: ECR Login
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v2
         id: ecr-login
+        with:
+          registries: 898673322888
+
+      - name: Pre Build Environment Substitute
+        env:
+          CKAN_API_TOKEN: ${{ secrets.CKAN_API_TOKEN }}
+          CKAN_SITE_URL: https://data.staging.ckan.ussba.io
+          REDIS_URL: redis://redis.staging.ckan.ussba.io:6379/1
+          SOLR_URL: http://solr.staging.ckan.ussba.io:8983/solr/ckan
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install gettext-base -y
+          cd ckan/
+          envsubst < ckan.ini.template > ckan.ini
 
       - name: ECR Build & Push CKAN
         uses: ./.github/actions/ecr
@@ -39,39 +57,39 @@ jobs:
           dockerfile: ckan/Dockerfile
           image: ${{ steps.ecr-login.outputs.registry }}/ckan
 
-      - name: ECR Build & Push CKAN Datapusher
-        uses: ./.github/actions/ecr
-        with:
-          dockerfile: ckan-datapusher/Dockerfile
-          image: ${{ steps.ecr-login.outputs.registry }}/ckan-datapusher
+      #- name: ECR Build & Push CKAN Datapusher
+      #  uses: ./.github/actions/ecr
+      #  with:
+      #    dockerfile: ckan-datapusher/Dockerfile
+      #    image: ${{ steps.ecr-login.outputs.registry }}/ckan-datapusher
 
-      - name: ECR Build & Push CKAN Solr
-        uses: ./.github/actions/ecr
-        with:
-          dockerfile: ckan-solr/Dockerfile
-          image: ${{ steps.ecr-login.outputs.registry }}/ckan-solr
+      #- name: ECR Build & Push CKAN Solr
+      #  uses: ./.github/actions/ecr
+      #  with:
+      #    dockerfile: ckan-solr/Dockerfile
+      #    image: ${{ steps.ecr-login.outputs.registry }}/ckan-solr
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment: staging
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+  #deploy:
+  #  needs: build
+  #  runs-on: ubuntu-latest
+  #  environment: staging
+  #  steps:
+  #    - name: Checkout
+  #      uses: actions/checkout@v3
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: ${{ secrets.OIDC_ROLE_ARN }}
-          aws-region: us-east-1
+  #    - name: Configure AWS credentials
+  #      uses: aws-actions/configure-aws-credentials@v2
+  #      with:
+  #        role-to-assume: ${{ secrets.OIDC_ROLE_ARN }}
+  #        aws-region: us-east-1
 
-      - name: ECR Login
-        uses: aws-actions/amazon-ecr-login@v1
-        id: ecr-login
+  #    - name: ECR Login
+  #      uses: aws-actions/amazon-ecr-login@v1
+  #      id: ecr-login
 
-      - name: Terraform Plan & Apply
-        uses: ./.github/actions/terraform
-        with:
-          folder: ./terraform/applications
-          image_tag: ${{ github.ref_name }}
-          workspace: staging
+  #    - name: Terraform Plan & Apply
+  #      uses: ./.github/actions/terraform
+  #      with:
+  #        folder: ./terraform/applications
+  #        image_tag: ${{ github.ref_name }}
+  #        workspace: staging
