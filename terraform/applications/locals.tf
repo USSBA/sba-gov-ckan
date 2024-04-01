@@ -82,6 +82,12 @@ data "aws_ssm_parameter" "sysadmin_pass" {
 data "aws_ssm_parameter" "datapusher_api_token" {
   name = "/ckan/${terraform.workspace}/datapusher/api_token"
 }
+data "aws_ssm_parameter" "xloader_db_password" {
+  name = "/xloader/staging/rds/pass"
+}
+data "aws_ssm_parameter" "jwt_secret" {
+ name = "/ckan/${terraform.workspace}/jwt_encode_secret"
+}
 # SMTP will be reconfigured in a future sprint
 #data "aws_ssm_parameter" "ses_user" {
 #  name = "SES_USER"
@@ -92,4 +98,10 @@ data "aws_ssm_parameter" "datapusher_api_token" {
 data "aws_acm_certificate" "ssl" {
   domain   = local.env.domain_name
   statuses = ["ISSUED"]
+}
+data "aws_rds_cluster" "ckan" {
+  cluster_identifier = "${terraform.workspace}-ckan"
+}
+data "aws_rds_cluster" "xloader" {
+  cluster_identifier = "${terraform.workspace}-xloader"
 }

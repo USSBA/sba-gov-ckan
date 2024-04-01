@@ -1,6 +1,6 @@
 module "ckan_solr" {
   source  = "USSBA/easy-fargate-service/aws"
-  version = "~> 9.3"
+  version = "~> 11.1"
 
   depends_on = [module.efs]
 

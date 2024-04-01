@@ -2,12 +2,11 @@
 locals {
   secrets = {
     default = [
-      { name = "SESSION_SECRET", valueFrom = data.aws_ssm_parameter.session_secret.arn },
-      { name = "APP_UUID", valueFrom = data.aws_ssm_parameter.app_uuid.arn },
-      { name = "CKAN_API_TOKEN_SECRET", valueFrom = data.aws_ssm_parameter.api_token.arn },
+      # do we need these?
+      #{ name = "SESSION_SECRET", valueFrom = data.aws_ssm_parameter.session_secret.arn },
+      #{ name = "APP_UUID", valueFrom = data.aws_ssm_parameter.app_uuid.arn },
       { name = "POSTGRES_PASSWORD", valueFrom = data.aws_ssm_parameter.db_password.arn },
       { name = "CKAN_SYSADMIN_PASSWORD", valueFrom = data.aws_ssm_parameter.sysadmin_pass.arn },
-      { name = "CKAN_DATAPUSHER_API_TOKEN", valueFrom = data.aws_ssm_parameter.datapusher_api_token.arn },
       { name = "CKAN___GOOGLEANALYTICS__ID", valueFrom = data.aws_ssm_parameter.google_analytics_id.arn },
       { name = "CKAN___GOOGLEANALYTICS__PASSWORD", valueFrom = data.aws_ssm_parameter.google_analytics_password.arn },
       #      { name = "CKAN_SMTP_USER", valueFrom = data.aws_ssm_parameter.ses_user.arn },
@@ -21,7 +20,7 @@ locals {
 
 module "ckan_web" {
   source  = "USSBA/easy-fargate-service/aws"
-  version = "~> 9.3"
+  version = "~> 11.1"
 
   # cloud watch logging
   log_group_name              = "/ecs/${local.env.name}/web"
@@ -68,34 +67,32 @@ module "ckan_web" {
         { name = "CKAN_VERSION", value = "2.10.0" },
         { name = "CKAN_SITE_ID", value = "default" },
         { name = "CKAN_STORAGE_PATH", value = "/var/lib/ckan" },
-        { name = "CKAN___BEAKER__SESSION__SECRET", value = "CHANGE_ME" },
-        { name = "CKAN___API_TOKEN__JWT__ENCODE__SECRE", value = "string:CHANGE_ME" },
-        { name = "CKAN___API_TOKEN__JWT__DECODE__SECRET=", value = "string:CHANGE_ME" },
+        { name = "CKAN___BEAKER__SESSION__SECRET", value = "${data.aws_ssm_parameter.session_secret.value}" },
+        { name = "CKAN___API_TOKEN__JWT__ENCODE__SECRET", value = "string:${data.aws_ssm_parameter.jwt_secret.value}" },
+        { name = "CKAN___API_TOKEN__JWT__DECODE__SECRET", value = "string:${data.aws_ssm_parameter.jwt_secret.value}" },
         { name = "CKAN__AUTH__CREATE_USER_VIA_API", value = "false" },
         { name = "CKAN__AUTH__CREATE_USER_VIA_WEB", value = "false" },
         # usmetadata plugins appears to cause plugins after it to not load properly.
         # datajson_validator appears to cause errors after ckan loads and is causing errors with other plugins.
         #{ name = "CKAN__PLUGINS", value = "datastore datapusher stats text_view recline_view dcat_usmetadata usmetadata googleanalytics datajson harvest datajson_validator datajson_harvest envvars" },
-        { name = "CKAN__PLUGINS", value = "image_view text_view recline_view datastore datapusher googleanalytics dcat_usmetadata datajson harvest datajson_harvest envvars" },
+        { name = "CKAN__PLUGINS", value = "image_view text_view recline_view datastore googleanalytics xloader envvars" },
         # Google Analytics
         { name = "CKAN___GOOGLEANALYTICS__ACCOUNT", value = "fake" },
         { name = "CKAN___GOOGLEANALYTICS__USERNAME", value = "fake" },
         # Domains & FQDN'S
         { name = "CKAN_SITE_URL", value = "https://data.${local.env.domain_name}" },
         { name = "CKAN_SOLR_URL", value = "http://${local.fqdn_solr}:8983/solr/ckan" },
-        { name = "CKAN_DATAPUSHER_URL", value = "http://${local.fqdn_datapusher}:8800" },
-        { name = "CKAN_DATAPUSHER_CALLBACK_URL", value = "https://${local.fqdn_web}" },
+        { name = "CKAN__DATAPUSHER__URL", value = "http://${local.fqdn_web}" },
         { name = "CKAN_REDIS_URL", value = "redis://${local.fqdn_redis}:6379/1" },
-        { name = "DATAPUSHER_FQDN", value = local.fqdn_datapusher },
         { name = "REDIS_FQDN", value = local.fqdn_redis },
         { name = "SOLR_FQDN", value = local.fqdn_solr },
         # SQLAlchemy URLs
-        { name = "CKAN_SQLALCHEMY_URL", value = "postgresql://ckan_default:${data.aws_ssm_parameter.db_password.value}@${local.fqdn_postgres}/ckan_default" },
-        { name = "CKAN_DATASTORE_WRITE_URL", value = "postgresql://ckan_default:${data.aws_ssm_parameter.db_password.value}@${local.fqdn_postgres}/datastore" },
-        { name = "CKAN_DATASTORE_READ_URL", value = "postgresql://datastore_ro:datastore@${local.fqdn_postgres}/datastore" },
-        { name = "TEST_CKAN_SQLALCHEMY_URL", value = "postgresql://ckan_default:${data.aws_ssm_parameter.db_password.value}@${local.fqdn_postgres}/ckan_test" },
-        { name = "TEST_CKAN_DATASTORE_WRITE_URL", value = "postgresql://ckan_default:${data.aws_ssm_parameter.db_password.value}@${local.fqdn_postgres}/datastore_test" },
-        { name = "TEST_CKAN_DATASTORE_READ_URL", value = "postgresql://datastore_ro:datastore@${local.fqdn_postgres}/datastore_test" },
+        { name = "CKAN_SQLALCHEMY_URL", value = "postgresql://ckan_default:${data.aws_ssm_parameter.db_password.value}@${data.aws_rds_cluster.ckan.cluster_identifier}/ckan_default" },
+        { name = "CKAN_DATASTORE_WRITE_URL", value = "postgresql://datastore:${data.aws_ssm_parameter.xloader_db_password.value}@${data.aws_rds_cluster.xloader.cluster_identifier}/datastore" },
+        { name = "CKAN_DATASTORE_READ_URL", value = "postgresql://datastore_ro:datastore@${data.aws_rds_cluster.xloader.cluster_identifier}/datastore" },
+        { name = "TEST_CKAN_SQLALCHEMY_URL", value = "postgresql://ckan_default:${data.aws_ssm_parameter.db_password.value}@${data.aws_rds_cluster.ckan.cluster_identifier}/ckan_test" },
+        { name = "TEST_CKAN_DATASTORE_WRITE_URL", value = "postgresql://datastore:${data.aws_ssm_parameter.xloader_db_password.value}@${data.aws_rds_cluster.xloader.cluster_identifier}/datastore_test" },
+        { name = "TEST_CKAN_DATASTORE_READ_URL", value = "postgresql://datastore_ro:datastore@${data.aws_rds_cluster.xloader.cluster_identifier}/datastore_test" },
         # Ports
         { name = "CKAN_PORT", value = "5000" },
         { name = "DATAPUSHER_PORT", value = "8800" },
@@ -115,6 +112,13 @@ module "ckan_web" {
         { name = "CKAN_SMTP_SERVER", value = "smtp.corporateict.domain:25" },
         { name = "CKAN_SMTP_STARTTLS", value = "True" },
         { name = "CKAN_SMTP_MAIL_FROM", value = "websupport@sba.gov" },
+        # XLoader
+        { name = "CKANEXT__XLOADER__JOBS_DB__URI", value = "postgresql://datastore:${data.aws_ssm_parameter.xloader_db_password.value}@${data.aws_rds_cluster.xloader.cluster_identifier}/datastore" },
+        { name = "CKANEXT__XLOADER__FORMATS", value = "csv application/csv xls xlsx application/vnd.ms-excel" },
+        { name = "CKANEXT__XLOADER__MAX_CONTENT_LENGTH", value = "1000000000" },
+        { name = "CKANEXT__XLOADER__JUST_LOAD_WITH_MESSYTABLES", value = "False" },
+        { name = "CKANEXT__XLOADER__JOB_TIMEOUT", value = "3600" },
+        { name = "CKANEXT__XLOADER__MAX_EXCERPT_LINES", value = "100" },
       ]
       secrets = local.ckan_secrets
     }
