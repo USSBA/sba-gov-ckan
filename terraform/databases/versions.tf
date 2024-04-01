@@ -5,7 +5,7 @@ terraform {
       source  = "hashicorp/aws"
     }
   }
-  required_version = "~> 1.0"
+  required_version = "1.6.1"
 }
 provider "aws" {
   region              = "us-east-1"

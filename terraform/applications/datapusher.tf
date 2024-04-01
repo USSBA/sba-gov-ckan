@@ -1,6 +1,6 @@
 module "ckan_datapusher" {
   source  = "USSBA/easy-fargate-service/aws"
-  version = "~> 9.3"
+  version = "~> 11.1"
 
   # cloud watch logging
   log_group_name              = "/ecs/${local.env.name}/datapusher"

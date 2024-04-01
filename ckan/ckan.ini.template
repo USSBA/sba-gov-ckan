@@ -66,12 +66,12 @@ beaker.session.secure = false
 beaker.session.timeout = 600
 
 ## Database settings ###########################################################
-sqlalchemy.url = ${CKAN_SQLALCHEMY_URL} #postgresql://ckan_default:pass@localhost/ckan_default
+sqlalchemy.url = ${CKAN_SQLALCHEMY_URL}
 sqlalchemy.pool_pre_ping = true
 # sqlalchemy.<OPTION> = 
 
 ## Site Settings ###############################################################
-ckan.site_url = ${CKAN_SITE_URL} #http://127.0.0.1:5000
+ckan.site_url = ${CKAN_SITE_URL}
 apikey_header_name = X-CKAN-API-Key
 ckan.cache_expires = 0
 ckan.cache_enabled = false
@@ -137,7 +137,7 @@ api_token.jwt.algorithm = HS256
 
 ## Search Settings #############################################################
 ckan.site_id = default
-solr_url = ${SOLR_URL} #http://127.0.0.1:8983/solr/ckan
+solr_url = ${SOLR_URL}
 solr_user = 
 solr_password = 
 ckan.search.remove_deleted_packages = true
@@ -155,7 +155,7 @@ ckan.group_and_organization_list_all_fields_max = 25
 solr_timeout = 60
 
 ## Redis Settings ##############################################################
-ckan.redis.url = ${REDIS_URL} #redis://localhost:6379/0
+ckan.redis.url = ${REDIS_URL}
 
 ## CORS Settings ###############################################################
 ckan.cors.origin_allow_all = false
