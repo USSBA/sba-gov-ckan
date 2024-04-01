@@ -4,6 +4,8 @@ RUN apk update
 
 COPY requirements.txt .
 
+COPY start-xloader.sh /docker-entrypoint.d/
+
 COPY ckan.ini /srv/app/ckan.ini
 
 RUN pip install -r requirements.txt
