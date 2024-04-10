@@ -87,12 +87,12 @@ module "ckan_web" {
         { name = "REDIS_FQDN", value = local.fqdn_redis },
         { name = "SOLR_FQDN", value = local.fqdn_solr },
         # SQLAlchemy URLs
-        { name = "CKAN_SQLALCHEMY_URL", value = "postgresql://ckan_default:${data.aws_ssm_parameter.db_password.value}@${data.aws_rds_cluster.ckan.cluster_identifier}/ckan_default" },
-        { name = "CKAN_DATASTORE_WRITE_URL", value = "postgresql://datastore:${data.aws_ssm_parameter.xloader_db_password.value}@${data.aws_rds_cluster.xloader.cluster_identifier}/datastore" },
-        { name = "CKAN_DATASTORE_READ_URL", value = "postgresql://datastore_ro:datastore@${data.aws_rds_cluster.xloader.cluster_identifier}/datastore" },
-        { name = "TEST_CKAN_SQLALCHEMY_URL", value = "postgresql://ckan_default:${data.aws_ssm_parameter.db_password.value}@${data.aws_rds_cluster.ckan.cluster_identifier}/ckan_test" },
-        { name = "TEST_CKAN_DATASTORE_WRITE_URL", value = "postgresql://datastore:${data.aws_ssm_parameter.xloader_db_password.value}@${data.aws_rds_cluster.xloader.cluster_identifier}/datastore_test" },
-        { name = "TEST_CKAN_DATASTORE_READ_URL", value = "postgresql://datastore_ro:datastore@${data.aws_rds_cluster.xloader.cluster_identifier}/datastore_test" },
+        { name = "CKAN_SQLALCHEMY_URL", value = "postgresql://ckan_default:${data.aws_ssm_parameter.db_password.value}@${data.aws_rds_cluster.ckan.endpoint}/ckan_default" },
+        { name = "CKAN_DATASTORE_WRITE_URL", value = "postgresql://datastore:${data.aws_ssm_parameter.xloader_db_password.value}@${data.aws_rds_cluster.xloader.endpoint}/datastore" },
+        { name = "CKAN_DATASTORE_READ_URL", value = "postgresql://datastore_ro:datastore@${data.aws_rds_cluster.xloader.endpoint}/datastore" },
+        { name = "TEST_CKAN_SQLALCHEMY_URL", value = "postgresql://ckan_default:${data.aws_ssm_parameter.db_password.value}@${data.aws_rds_cluster.ckan.endpoint}/ckan_test" },
+        { name = "TEST_CKAN_DATASTORE_WRITE_URL", value = "postgresql://datastore:${data.aws_ssm_parameter.xloader_db_password.value}@${data.aws_rds_cluster.xloader.endpoint}/datastore_test" },
+        { name = "TEST_CKAN_DATASTORE_READ_URL", value = "postgresql://datastore_ro:datastore@${data.aws_rds_cluster.xloader.endpoint}/datastore_test" },
         # Ports
         { name = "CKAN_PORT", value = "5000" },
         { name = "DATAPUSHER_PORT", value = "8800" },
@@ -113,7 +113,7 @@ module "ckan_web" {
         { name = "CKAN_SMTP_STARTTLS", value = "True" },
         { name = "CKAN_SMTP_MAIL_FROM", value = "websupport@sba.gov" },
         # XLoader
-        { name = "CKANEXT__XLOADER__JOBS_DB__URI", value = "postgresql://datastore:${data.aws_ssm_parameter.xloader_db_password.value}@${data.aws_rds_cluster.xloader.cluster_identifier}/datastore" },
+        { name = "CKANEXT__XLOADER__JOBS_DB__URI", value = "postgresql://datastore:${data.aws_ssm_parameter.xloader_db_password.value}@${data.aws_rds_cluster.xloader.endpoint}/datastore" },
         { name = "CKANEXT__XLOADER__FORMATS", value = "csv application/csv xls xlsx application/vnd.ms-excel" },
         { name = "CKANEXT__XLOADER__MAX_CONTENT_LENGTH", value = "1000000000" },
         { name = "CKANEXT__XLOADER__JUST_LOAD_WITH_MESSYTABLES", value = "False" },
