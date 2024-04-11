@@ -30,6 +30,11 @@ locals {
       desired_capacity_ckan       = 1
       desired_capacity_datapusher = 1
       desired_capacity_solr       = 1 # never exceed 1 for solr
+
+      # cloudfront defaults
+      default_ttl = 0
+      max_ttl     = 0
+      min_ttl     = 0
     }
     production = {
       single_nat_gateway          = false
@@ -37,6 +42,11 @@ locals {
       desired_capacity_ckan       = 1                          #3
       desired_capacity_datapusher = 1                          #2
       desired_capacity_solr       = 1                          # never exceed 1 for solr
+
+      # cloudfront defaults
+      default_ttl = 604800
+      max_ttl     = 604800
+      min_ttl     = 604800
     }
   }
 
@@ -86,7 +96,7 @@ data "aws_ssm_parameter" "xloader_db_password" {
   name = "/xloader/staging/rds/pass"
 }
 data "aws_ssm_parameter" "jwt_secret" {
- name = "/ckan/${terraform.workspace}/jwt_encode_secret"
+  name = "/ckan/${terraform.workspace}/jwt_encode_secret"
 }
 # SMTP will be reconfigured in a future sprint
 #data "aws_ssm_parameter" "ses_user" {

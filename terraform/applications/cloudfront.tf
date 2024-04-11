@@ -6,18 +6,6 @@ data "aws_cloudfront_origin_request_policy" "all_viewer" {
   name = "Managed-AllViewer"
 }
 
-# TODO: Code can be shortened using a Dynamic block as most behaviors except API are different.
-#locals {
-#  default_web {
-#  # TODO: code to do stuff
-#  }
-#  default_api {
-#  # TODO: code to do stuff
-#  }
-#  behaviors = [
-#  ]
-#}
-
 resource "aws_cloudfront_distribution" "distribution" {
   aliases             = [local.fqdn_data]
   comment             = "CKAN ${title(terraform.workspace)}"
@@ -86,31 +74,18 @@ resource "aws_cloudfront_distribution" "distribution" {
       "GET",
       "HEAD",
     ]
-    compress               = false
-    default_ttl            = 604800
-    max_ttl                = 604800
-    min_ttl                = 604800
-    path_pattern           = "/dataset/*/resource/*/download/*"
-    smooth_streaming       = false
-    target_origin_id       = "web"
-    trusted_key_groups     = []
-    trusted_signers        = []
-    viewer_protocol_policy = "redirect-to-https"
-
-    forwarded_values {
-      headers = [
-        "Host",
-      ]
-      query_string            = true
-      query_string_cache_keys = []
-
-      cookies {
-        forward = "whitelist"
-        whitelisted_names = [
-          "auth_tkt",
-        ]
-      }
-    }
+    compress                 = false
+    cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
+    origin_request_policy_id = "216adef6-5c7f-47e4-b989-5492eafa07d3"
+    default_ttl              = local.env.default_ttl
+    max_ttl                  = local.env.max_ttl
+    min_ttl                  = local.env.min_ttl
+    path_pattern             = "/dataset/*/resource/*/download/*"
+    smooth_streaming         = false
+    target_origin_id         = "web"
+    trusted_key_groups       = []
+    trusted_signers          = []
+    viewer_protocol_policy   = "redirect-to-https"
   }
   ordered_cache_behavior {
     allowed_methods = [
