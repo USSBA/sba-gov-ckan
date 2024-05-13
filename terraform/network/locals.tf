@@ -32,18 +32,12 @@ locals {
       cidr               = "10.250.0.0/16"
       #TODO: Remove once CKAN migration is complete. Leaving behind for easy toggle in case CKAN modifications must be made in sba.gov
       # sba.gov domain: "data.staging.sba.gov"
-      domain_name                 = "staging.ckan.ussba.io"
-      desired_capacity_ckan       = 1
-      desired_capacity_datapusher = 1
-      desired_capacity_solr       = 1 # never exceed 1 for solr
+      domain_name = "staging.ckan.ussba.io"
     }
     production = {
-      single_nat_gateway          = false
-      cidr                        = "10.251.0.0/16"
-      domain_name                 = "data.sba.gov"
-      desired_capacity_ckan       = 3
-      desired_capacity_datapusher = 2
-      desired_capacity_solr       = 1 # never exceed 1 for solr
+      single_nat_gateway = false
+      cidr               = "10.251.0.0/16"
+      domain_name        = "data.sba.gov"
     }
   }
 
