@@ -26,10 +26,9 @@ locals {
       single_nat_gateway = true
       #TODO: Remove once CKAN migration is complete. Leaving behind for easy toggle in case CKAN modifications must be made in sba.gov
       # sba.gov domain: "data.staging.sba.gov"
-      domain_name                 = "staging.ckan.ussba.io"
-      desired_capacity_ckan       = 1
-      desired_capacity_datapusher = 1
-      desired_capacity_solr       = 1 # never exceed 1 for solr
+      domain_name           = "staging.ckan.ussba.io"
+      desired_capacity_ckan = 1
+      desired_capacity_solr = 1 # never exceed 1 for solr
 
       # cloudfront defaults
       default_ttl = 0
@@ -37,11 +36,10 @@ locals {
       min_ttl     = 0
     }
     production = {
-      single_nat_gateway          = false
-      domain_name                 = "production.ckan.ussba.io" #"data.sba.gov"
-      desired_capacity_ckan       = 1                          #3
-      desired_capacity_datapusher = 1                          #2
-      desired_capacity_solr       = 1                          # never exceed 1 for solr
+      single_nat_gateway    = false
+      domain_name           = "production.ckan.ussba.io" #"data.sba.gov"
+      desired_capacity_ckan = 1                          #3
+      desired_capacity_solr = 1                          # never exceed 1 for solr
 
       # cloudfront defaults
       default_ttl = 604800

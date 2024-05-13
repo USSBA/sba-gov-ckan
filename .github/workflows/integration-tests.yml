@@ -30,13 +30,6 @@ jobs:
           image: 'ckan'
           push-to-ecr: false
 
-      - name: 'Docker Image Build CKAN Datapusher'
-        uses: './.github/actions/ecr'
-        with:
-          dockerfile: 'ckan-datapusher/Dockerfile'
-          image: 'ckan-datapusher'
-          push-to-ecr: false
-
       - name: 'Docker Image Build CKAN Solr'
         uses: './.github/actions/ecr'
         with:
@@ -50,10 +43,10 @@ jobs:
       - name: 'Checkout'
         uses: 'actions/checkout@v3'
 
-      - name: 'Install Terraform 1.0.9'
+      - name: 'Install Terraform 1.6.1'
         uses: 'hashicorp/setup-terraform@v2'
         with:
-          terraform_version: '1.0.9'
+          terraform_version: '1.6.1'
 
       - name: 'Terraform Format'
         run: |
