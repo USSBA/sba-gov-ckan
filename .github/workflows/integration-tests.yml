@@ -42,13 +42,6 @@ jobs:
           image: 'ckan'
           push-to-ecr: false
 
-      - name: 'Docker Image Build CKAN Solr'
-        uses: './.github/actions/ecr'
-        with:
-          dockerfile: 'ckan-solr/Dockerfile'
-          image: 'ckan-solr'
-          push-to-ecr: false
-
   terraform:
     runs-on: 'ubuntu-latest'
     steps:
