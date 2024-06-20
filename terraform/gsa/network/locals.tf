@@ -1,6 +1,7 @@
 locals {
 
-  region = "us-east-1"
+  region     = "us-east-1"
+  account_id = "898673322888"
 
   zone_map = {
     a = 0,
