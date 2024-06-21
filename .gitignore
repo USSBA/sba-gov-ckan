@@ -1,6 +1,5 @@
 .env
 
 # Terraform
-**/.terraform*
+**/.terraform/*
 **/crash.log
-**/.terraform.lock.hcl
