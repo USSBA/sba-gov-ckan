@@ -9,6 +9,7 @@ Custom Docker Images
 * [CKAN](./ckan/README.md)
 * [Apache Solr](./ckan-solr/README.md)
 * [DataPusher](./ckan-datapusher/README.md)
+* [Log Cleaner](./terraform/log-cleaner/README.md)
 
 ![Network Diagram](docs/images/ckan-network.png)
 
