@@ -1,0 +1,78 @@
+name: Daily Schedule
+on:
+  schedule:
+    - cron:  '0 11 * * *' # Triggers Daily @ 06:00 EST
+defaults:
+  run:
+    shell: bash
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  # NOTE:
+  # Added a story to the backlog to move OIDC into its own state and enable this portion of the daily cron workflow
+  # ---------------
+  #update-oidc-thumbprints:
+  #  strategy:
+  #    matrix:
+  #      workspace: [lower, upper]
+  #  runs-on: ubuntu-latest
+  #  environment: ${{ matrix.workspace }}
+  #  steps:
+  #    - name: Checkout
+  #      uses: actions/checkout@v4
+
+  #    - name: Configure AWS credentials
+  #      uses: aws-actions/configure-aws-credentials@v4
+  #      with:
+  #        role-to-assume: ${{ secrets.OIDC_ROLE_ARN }}
+  #        aws-region: us-east-1
+
+  #    - name: Install Terraform
+  #      uses: hashicorp/setup-terraform@v3
+  #      with:
+  #        terraform_version: '1.6.1'
+
+  #    - name: Terraform Init, Plan, and Apply
+  #      uses: ./.github/actions/terraform
+  #      with:
+  #        directory: github-oidc
+  #        workspace: ${{ matrix.workspace }}
+
+  delete-retired-log-streams:
+    #needs: [update-oidc-thumbprints]
+    strategy:
+      matrix:
+        workspace: [staging]
+    runs-on: ubuntu-latest
+    environment: ${{ matrix.workspace }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.OIDC_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.6.1'
+
+      - name: Terraform Init, Plan, and Apply
+        uses: ./.github/actions/terraform
+        with:
+          directory: log-cleaner
+          workspace: ${{ matrix.workspace }}
+
+      - name: Start Log Cleaner Task
+        run: |
+          if [[ -z "`aws ecs list-tasks --cluster ${{ vars.ECS_CLUSTER }} --family ${{ matrix.workspace }}-log-cleaner --query 'taskArns[]' --output text || echo ''`" ]]; then
+            aws ecs run-task --cluster ${{ vars.ECS_CLUSTER }} \
+              --task-definition `aws ecs describe-task-definition --task-definition ${{ matrix.workspace }}-log-cleaner --query "taskDefinition.taskDefinitionArn" --output text` \
+              --launch-type FARGATE \
+              --network-configuration "awsvpcConfiguration={subnets=[${{ vars.SUBNET_ID }}],securityGroups=[${{ vars.SECURITY_GROUP_ID }}],assignPublicIp='DISABLED'}"
+          fi
+
