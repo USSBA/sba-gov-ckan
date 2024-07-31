@@ -64,7 +64,8 @@ jobs:
       - name: Terraform Init, Plan, and Apply
         uses: ./.github/actions/terraform
         with:
-          directory: terraform/log-cleaner
+          folder: terraform/log-cleaner
+          image_tag: latest
           workspace: ${{ matrix.workspace }}
 
       - name: Start Log Cleaner Task
